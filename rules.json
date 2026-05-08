@@ -1,0 +1,27 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
+        ".validate": "newData.hasChildren(['email','name','balance'])",
+        "balance": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "dailyMineCount": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 50 || auth.token.email === 'aialskrani@gmail.com'"
+        }
+      },
+      ".read": "auth != null"
+    },
+    "coupons": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com' || (auth != null && newData.exists() && !newData.child('usedBy').hasChild(auth.uid))",
+        "usedBy": {
+          ".write": "auth != null"
+        }
+      }
+    }
+  }
+}
