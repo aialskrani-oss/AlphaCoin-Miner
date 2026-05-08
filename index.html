@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AlphaCoin Miner</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span style="color:#888;font-size:.9rem">جار التحميل…</span>
+</div>
+
+<div id="app">
+
+  <!-- ── AUTH ── -->
+  <div id="auth-screen">
+    <div class="logo-wrap">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-title">AlphaCoin</div>
+      <div class="logo-sub">MINER</div>
+    </div>
+    <div class="auth-card">
+      <h2>ابدأ التعدين الآن</h2>
+      <p>سجّل دخولك بحساب Google واحصل على AlphaCoins مجاناً كل يوم</p>
+      <button class="btn-google" id="btn-login">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"/>
+        تسجيل الدخول بـ Google
+      </button>
+    </div>
+  </div>
+
+  <!-- ── MAIN APP ── -->
+  <div id="main-screen">
+    <nav>
+      <div class="nav-brand">⚡ AlphaCoin</div>
+      <div class="nav-user">
+        <img id="nav-avatar" src="" alt="avatar"/>
+        <span id="nav-name"></span>
+        <button class="btn-logout" id="btn-logout">خروج</button>
+      </div>
+    </nav>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="mine">⛏ تعدين</button>
+      <button class="tab-btn" data-tab="leaderboard">🏆 المتصدرون</button>
+      <button class="tab-btn" data-tab="profile">👤 حسابي</button>
+    </div>
+
+    <!-- Mine Tab -->
+    <div class="tab-content active" id="tab-mine">
+      <div class="mine-section">
+        <div class="balance-card">
+          <div class="balance-label">رصيدك الحالي</div>
+          <div class="balance-amount">
+            <span class="balance-symbol">α</span>
+            <span id="balance-val">0.00</span>
+          </div>
+          <div class="balance-stats">
+            <span>إجمالي التعدين: <strong id="total-mined">0</strong></span>
+            <span>اليوم: <strong id="daily-count">0</strong>/50</span>
+          </div>
+        </div>
+
+        <div class="mine-btn-wrap">
+          <button class="mine-btn" id="mine-btn">
+            ⛏<br>MINE
+          </button>
+          <div class="mine-ring"></div>
+          <div class="mine-ring"></div>
+          <div class="mine-ring"></div>
+        </div>
+
+        <div class="mine-limit">
+          تبقى لك <span id="mines-left">50</span> عملية تعدين اليوم
+        </div>
+
+        <div class="coupon-section">
+          <h3>🎁 استبدال قسيمة</h3>
+          <div class="coupon-input-row">
+            <input class="inp" id="coupon-inp" type="text" placeholder="أدخل كود القسيمة…" autocomplete="off" style="direction:ltr"/>
+            <button class="btn-gold" id="coupon-btn">تطبيق</button>
+          </div>
+          <div class="coupon-msg" id="coupon-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Tab -->
+    <div class="tab-content" id="tab-leaderboard">
+      <div class="lb-section">
+        <h2>🏆 لوحة المتصدرين</h2>
+        <div style="overflow-x:auto">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>المستخدم</th>
+                <th>الرصيد (α)</th>
+                <th>إجمالي التعدين</th>
+              </tr>
+            </thead>
+            <tbody id="lb-body">
+              <tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div class="tab-content" id="tab-profile">
+      <div class="profile-section">
+        <div class="profile-card">
+          <img id="profile-avatar" src="" alt="avatar"/>
+          <h3 id="profile-name"></h3>
+          <div class="profile-email" id="profile-email"></div>
+          <div class="profile-stats">
+            <div class="stat-box">
+              <div class="stat-val" id="profile-balance">0</div>
+              <div class="stat-lbl">الرصيد (α)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="profile-total">0</div>
+              <div class="stat-lbl">إجمالي التعدين</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="profile-daily">0/50</div>
+              <div class="stat-lbl">عمليات اليوم</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="profile-rank">-</div>
+              <div class="stat-lbl">ترتيبك</div>
+            </div>
+          </div>
+        </div>
+        <div id="admin-btn-wrap" style="display:none">
+          <a href="admin.html" class="admin-link-btn">🔐 لوحة الأدمن</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
