@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – AlphaCoin Miner</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="admin-body">
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span style="color:#888;font-size:.9rem">جار التحقق…</span>
+</div>
+
+<div id="admin-app" style="display:none">
+
+  <div id="denied-view" class="denied-screen" style="display:none">
+    <h2>⛔ وصول مرفوض</h2>
+    <p style="color:#888">هذه الصفحة مخصصة للأدمن فقط.</p>
+    <a href="index.html" class="btn-gold" style="margin-top:1rem;text-decoration:none;padding:.8rem 2rem;border-radius:8px">العودة</a>
+  </div>
+
+  <div id="admin-main" style="display:none">
+    <div class="admin-header">
+      <h1>⚡ لوحة تحكم AlphaCoin</h1>
+      <span id="admin-user-email"></span>
+    </div>
+
+    <div class="admin-content">
+
+      <!-- Stats -->
+      <div class="stat-cards" id="admin-stats">
+        <div class="stat-mini"><div class="val" id="stat-users">0</div><div class="lbl">مستخدم</div></div>
+        <div class="stat-mini"><div class="val" id="stat-total-balance">0</div><div class="lbl">α إجمالي</div></div>
+        <div class="stat-mini"><div class="val" id="stat-coupons">0</div><div class="lbl">قسيمة نشطة</div></div>
+      </div>
+
+      <!-- Top row cards -->
+      <div class="admin-grid">
+        <!-- Create Coupon -->
+        <div class="admin-card">
+          <h3>🎁 إنشاء قسيمة جديدة</h3>
+          <div class="form-row">
+            <label>كود القسيمة (اتركه فارغاً للتوليد التلقائي)</label>
+            <input class="inp" id="coupon-code-inp" type="text" placeholder="مثال: ALPHA2025" style="direction:ltr"/>
+          </div>
+          <div class="form-row">
+            <label>المكافأة (بالعملات α)</label>
+            <input class="inp" id="coupon-reward-inp" type="number" min="0.1" step="0.1" value="10"/>
+          </div>
+          <button class="btn-gold" id="create-coupon-btn" style="width:100%">إنشاء القسيمة</button>
+          <div id="coupon-result" style="margin-top:.8rem;font-size:.9rem;min-height:1.2em"></div>
+        </div>
+
+        <!-- Edit Balance -->
+        <div class="admin-card">
+          <h3>✏️ تعديل رصيد مستخدم</h3>
+          <div class="form-row">
+            <label>معرّف المستخدم (UID)</label>
+            <input class="inp" id="edit-uid-inp" type="text" placeholder="UID…" style="direction:ltr"/>
+          </div>
+          <div class="form-row">
+            <label>الرصيد الجديد (α)</label>
+            <input class="inp" id="edit-balance-inp" type="number" min="0" step="0.01" value="0"/>
+          </div>
+          <button class="btn-gold" id="edit-balance-btn" style="width:100%">تحديث الرصيد</button>
+          <div id="edit-result" style="margin-top:.8rem;font-size:.9rem;min-height:1.2em"></div>
+        </div>
+      </div>
+
+      <!-- Coupons list -->
+      <div class="admin-card" style="margin-bottom:1.5rem">
+        <h3>📋 قائمة القسائم</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-tbl">
+            <thead>
+              <tr>
+                <th>الكود</th>
+                <th>المكافأة</th>
+                <th>الحالة</th>
+                <th>عدد الاستخدامات</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="coupons-body">
+              <tr><td colspan="5" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Users table -->
+      <div class="admin-card">
+        <h3>👥 جميع المستخدمين</h3>
+        <div style="margin-bottom:1rem">
+          <input class="inp" id="search-inp" type="text" placeholder="بحث بالاسم أو البريد…" style="max-width:320px"/>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-tbl">
+            <thead>
+              <tr>
+                <th></th>
+                <th>الاسم</th>
+                <th>البريد</th>
+                <th>الرصيد (α)</th>
+                <th>إجمالي التعدين</th>
+                <th>تعدين اليوم</th>
+                <th>UID</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-body">
+              <tr><td colspan="8" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
