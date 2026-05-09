@@ -2,225 +2,194 @@
   <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <meta name="description" content="AlphaCoin Miner — عدّن عملة AlphaCoin واجمع مكافآتك"/>
+    <meta property="og:title" content="AlphaCoin Miner"/>
+    <meta property="og:description" content="عدّن AlphaCoin واجمع مكافآتك يومياً"/>
     <title>AlphaCoin Miner</title>
-    <link rel="stylesheet" href="style.css"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>â¡</text></svg>"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="style.css"/>
   </head>
   <body>
-  <div id="particles"></div>
-  <div id="loading"><div class="spinner"></div></div>
-
-  <div id="app">
-
-    <!-- AUTH -->
-    <div id="auth-screen" style="display:none">
-      <div class="auth-logo">
-        <div class="auth-icon">â¡</div>
-        <div class="auth-title">AlphaCoin</div>
-        <div class="auth-sub">MINER</div>
+    <!-- Maintenance overlay -->
+    <div id="maintenance-overlay" style="display:none">
+      <div class="maintenance-box">
+        <div style="font-size:3rem">🔧</div>
+        <h2>الموقع تحت الصيانة</h2>
+        <p id="maintenance-msg">يرجى المحاولة لاحقاً</p>
       </div>
-      <p class="auth-desc">ÙØ¸Ø§Ù ØªØ¹Ø¯ÙÙ ØªÙÙØ§Ø¦Ù â Ø¹Ø¯ÙÙ Ø¹ÙÙØ§Øª Alpha Ø¨ÙÙÙØ§ ØªÙØ§Ù</p>
-      <button class="btn-google-login" id="google-login-btn">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/>
-        Ø§ÙØ¯Ø®ÙÙ Ø¨Ø­Ø³Ø§Ø¨ Google
-      </button>
-      <div class="auth-err" id="auth-err"></div>
     </div>
 
-    <!-- GAME -->
-    <div id="game-container" style="display:none">
+    <!-- Announcement banner -->
+    <div id="announcement-banner" style="display:none" class="announcement-banner ann-info">
+      <span id="announcement-text"></span>
+      <button onclick="document.getElementById('announcement-banner').style.display='none'" class="ann-close">✕</button>
+    </div>
 
-      <nav>
-        <div class="nav-brand">â¡ AlphaCoin</div>
-        <div class="nav-right">
-          <img id="user-photo" class="user-avatar" src="" alt="" style="display:none" onerror="this.style.display='none'"/>
-          <span class="nav-username" id="user-name"></span>
-          <button class="btn-logout" id="logout-btn">Ø®Ø±ÙØ¬</button>
+    <!-- Daily bonus popup -->
+    <div id="daily-bonus-popup" style="display:none" class="daily-bonus-overlay">
+      <div class="daily-bonus-box">
+        <div class="db-emoji">🎁</div>
+        <div class="db-title">مكافأة يومية!</div>
+        <div class="db-amount" id="bonus-amount"></div>
+        <div class="db-streak" id="bonus-streak"></div>
+        <button onclick="document.getElementById('daily-bonus-popup').style.display='none'" class="btn-primary" style="margin-top:1rem;width:100%">رائع! 🎉</button>
+      </div>
+    </div>
+
+    <!-- Banned screen -->
+    <div id="banned-screen" style="display:none" class="banned-screen">
+      <div class="banned-box">
+        <div style="font-size:3rem">🚫</div>
+        <h2>تم حظر حسابك</h2>
+        <p id="ban-reason">تم حظر حسابك من قِبل الإدارة.</p>
+        <button onclick="signOut(auth)" class="btn-primary" style="margin-top:1rem">تسجيل خروج</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>جار التحميل…</p>
+    </div>
+
+    <!-- Auth screen -->
+    <div id="auth-screen" style="display:none" class="auth-screen">
+      <div class="auth-card">
+        <div class="logo-wrap">
+          <div class="logo-icon">⛏</div>
+          <h1 class="logo-text">AlphaCoin</h1>
+          <p class="logo-sub">عدّن وأنت جالس 🚀</p>
         </div>
+        <button id="google-login-btn" class="google-btn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/>
+          الدخول بحساب Google
+        </button>
+        <div id="auth-error" class="auth-error"></div>
+      </div>
+    </div>
+
+    <!-- Game container -->
+    <div id="game-container" style="display:none" class="game-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <button id="logout-btn" class="logout-btn">خروج</button>
+          <span id="streak-badge" class="streak-badge" style="display:none"></span>
+        </div>
+        <div class="header-center">
+          <span class="header-username" id="username"></span>
+          <span class="header-brand">AlphaCoin ⛏</span>
+        </div>
+        <div class="header-right">
+          <div class="header-balance">
+            <span id="balance" class="balance-num">0.000000</span>
+            <span class="balance-unit">α</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Tabs -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="mine">⛏ التعدين</button>
+        <button class="tab-btn" data-tab="upgrades">⚡ الترقيات</button>
+        <button class="tab-btn" data-tab="earn">🎁 اكسب</button>
+        <button class="tab-btn" data-tab="leaderboard">🏆 الترتيب</button>
       </nav>
 
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="mine">â ØªØ¹Ø¯ÙÙ</button>
-        <button class="tab-btn" data-tab="upgrades">ð ØªØ±ÙÙØ§Øª</button>
-        <button class="tab-btn" data-tab="profile">ð¤ Ø­Ø³Ø§Ø¨Ù</button>
-      </div>
-
-      <!-- ââ MINE TAB ââ -->
-      <div class="tab-content active" id="tab-mine">
-        <div class="mine-section">
-
-          <!-- Balance Card -->
-          <div class="balance-card">
-            <div class="bc-label">Ø±ØµÙØ¯Ù Ø§ÙØ­Ø§ÙÙ</div>
-            <div class="bc-amount"><span class="bc-sym">Î±</span><span id="balance">0.000000</span></div>
-            <div class="bc-row">
-              <div class="bc-stat">
-                <span class="bc-stat-lbl">Ø¥Ø¬ÙØ§ÙÙ Ø§ÙØªØ¹Ø¯ÙÙ</span>
-                <span class="bc-stat-val" id="total-mined">0.000000</span>
-              </div>
-              <div class="bc-divider"></div>
-              <div class="bc-stat">
-                <span class="bc-stat-lbl">ÙÙØ© Ø§ÙØªØ¹Ø¯ÙÙ</span>
-                <span class="bc-stat-val"><span id="mining-power-display">1</span> Î±/Ø³Ø§Ø¹Ø©</span>
-              </div>
-            </div>
+      <!-- Tab: Mine -->
+      <div id="tab-mine" class="tab-content active">
+        <!-- Active Cards -->
+        <div id="cards-section" style="display:none">
+          <div class="cards-section-title">🃏 بطاقات العروض المتاحة</div>
+          <div id="active-cards-list"></div>
+        </div>
+        <!-- Mining card -->
+        <div class="mining-card">
+          <div class="mining-rig-icon">⛏</div>
+          <div class="mining-label">الرصيد المتعدّن</div>
+          <div class="mined-amount" id="mined-amount">0.000000</div>
+          <div class="mining-unit">α</div>
+          <div class="mining-rate" id="mining-rate">0 α/ثانية</div>
+          <div class="mining-progress-wrap">
+            <div class="mining-progress-bar"><div class="mining-progress" id="mining-progress"></div></div>
           </div>
-
-          <!-- Auto Mining Card -->
-          <div class="auto-mine-card">
-            <div class="auto-mine-header">
-              <div class="mine-rig-icon" id="mine-status-icon">
-                <div class="rig-core"></div>
-                <div class="rig-ring r1"></div>
-                <div class="rig-ring r2"></div>
-              </div>
-              <div class="auto-mine-info">
-                <div class="auto-mine-title" id="mine-status-title">Ø§ÙØªØ¹Ø¯ÙÙ ÙØ´Ø· â</div>
-                <div class="auto-mine-sub" id="mine-status-sub">ÙØªÙ ØªØ¹Ø¯ÙÙ Ø§ÙØ¹ÙÙØ§Øª ØªÙÙØ§Ø¦ÙØ§Ù Ø§ÙØ¢Ù</div>
-                <div class="per-sec-rate" id="per-sec-rate">+0.00000028 Î±/Ø«Ø§ÙÙØ©</div>
-              </div>
-              <div class="auto-mine-badge active" id="mine-badge">â ÙØ´Ø·</div>
-            </div>
-
-            <div class="mine-progress-wrap">
-              <div class="mine-progress-labels">
-                <span>ÙØ¯Ø© Ø§ÙØªØ¹Ø¯ÙÙ Ø§ÙÙÙÙØ¶ÙØ©</span>
-                <span id="mine-time-text">0.0000 / 3 Ø³Ø§Ø¹Ø§Øª</span>
-              </div>
-              <div class="mine-progress-bar">
-                <div class="mine-progress-fill" id="mine-progress-fill"></div>
-                <div class="mine-progress-glow" id="mine-progress-glow"></div>
-              </div>
-            </div>
-
-            <div class="mine-stats-row">
-              <div class="mine-stat-box">
-                <div class="mine-stat-val live-counter" id="pending-earnings">0.000000</div>
-                <div class="mine-stat-lbl">Ø£Ø±Ø¨Ø§Ø­ ÙØ¹ÙÙØ© (Î±)</div>
-              </div>
-              <div class="mine-stat-box">
-                <div class="mine-stat-val countdown" id="time-remaining">00:00:00</div>
-                <div class="mine-stat-lbl">ÙÙØª Ø­ØªÙ Ø§ÙØ¥ÙÙØ§Ù</div>
-              </div>
-              <div class="mine-stat-box">
-                <div class="mine-stat-val" id="mine-rate">1 Î±/Ø³Ø§Ø¹Ø©</div>
-                <div class="mine-stat-lbl">ÙØ¹Ø¯Ù Ø§ÙØªØ¹Ø¯ÙÙ</div>
-              </div>
-            </div>
-
-            <button class="btn-claim" id="claim-btn">
-              <span>ð° Ø§Ø¬ÙÙ Ø§ÙØ£Ø±Ø¨Ø§Ø­</span>
-            </button>
-          </div>
-
-  
-          <!-- Active Cards -->
-          <div id="cards-section" style="display:none">
-            <div class="cards-section-title">🃏 بطاقات العروض المتاحة</div>
-            <div id="active-cards-list"></div>
-          </div>
-
-          <!-- Coupon -->
-          <div class="coupon-section">
-            <div class="coupon-label">ð ÙÙØ¯ Ø§ÙÙØ³ÙÙØ©</div>
-            <div class="coupon-row">
-              <input class="coupon-inp" id="coupon-code" type="text" placeholder="Ø£Ø¯Ø®Ù Ø§ÙÙÙØ¯ ÙÙØ§â¦" autocomplete="off" autocapitalize="characters"/>
-              <button class="btn-redeem" id="redeem-btn">Ø§Ø³ØªØ¨Ø¯Ø§Ù</button>
-            </div>
-            <div class="coupon-msg" id="coupon-msg"></div>
-          </div>
-
-          <div id="admin-btn-wrap" style="display:none;text-align:center;margin-top:1rem">
-            <a href="/admin" class="btn-admin">ð ÙÙØ­Ø© Ø§ÙØ£Ø¯ÙÙ</a>
-          </div>
-
+          <div id="mining-full-msg" class="mining-full-msg" style="display:none">⚡ المستودع ممتلئ! اجمع الآن</div>
+          <button id="claim-btn" class="claim-btn" onclick="claimMining()">⚡ جمع المكافآت</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-label">قوة التعدين</div><div class="stat-val" id="stat-power">1 α/س</div></div>
+          <div class="stat-box"><div class="stat-label">مدة التعدين</div><div class="stat-val" id="stat-duration">1 ساعة</div></div>
         </div>
       </div>
 
-      <!-- ââ UPGRADES TAB ââ -->
-      <div class="tab-content" id="tab-upgrades">
-        <div class="upgrades-section">
-          <div class="upgrade-header-text">
-            <h2>ð ÙØªØ¬Ø± Ø§ÙØªØ±ÙÙØ§Øª</h2>
-            <p>Ø±ØµÙØ¯Ù Ø§ÙÙØªØ§Ø­: <strong id="upgrade-balance">0.000000</strong> Î±</p>
-          </div>
-
-          <div class="upgrade-group">
-            <div class="upgrade-group-title">â¡ ØªØ±ÙÙØ© ÙÙØ© Ø§ÙØªØ¹Ø¯ÙÙ</div>
-            <div class="upgrade-group-sub">Ø²ÙØ§Ø¯Ø© ÙÙÙØ© Ø§ÙØ¹ÙÙØ§Øª Ø§ÙÙØ¹Ø¯ÙÙØ© ÙÙ ÙÙ Ø³Ø§Ø¹Ø© â ÙØ¤Ø«Ø± ÙÙØ±Ø§Ù Ø¹ÙÙ ÙØ¹Ø¯Ù Ø§ÙØªØ¹Ø¯ÙÙ</div>
-            <div class="upgrade-cards" id="power-upgrades"></div>
-          </div>
-
-          <div class="upgrade-group">
-            <div class="upgrade-group-title">â± ØªØ±ÙÙØ© ÙØ¯Ø© Ø§ÙØªØ¹Ø¯ÙÙ Ø§ÙÙØ³ØªÙØ±</div>
-            <div class="upgrade-group-sub">ØªÙØ¯ÙØ¯ Ø§ÙÙÙØª Ø§ÙØ°Ù ÙØ³ØªÙØ± ÙÙÙ Ø§ÙØªØ¹Ø¯ÙÙ ÙØ¨Ù Ø£Ù ÙØªÙÙÙ</div>
-            <div class="upgrade-cards" id="duration-upgrades"></div>
-          </div>
-        </div>
+      <!-- Tab: Upgrades -->
+      <div id="tab-upgrades" class="tab-content">
+        <div class="tab-section-title">⚡ ترقية قوة التعدين</div>
+        <div id="upgrades-power" class="upgrades-list"></div>
+        <div class="tab-section-title" style="margin-top:1.2rem">⏱ ترقية مدة التعدين</div>
+        <div id="upgrades-duration" class="upgrades-list"></div>
       </div>
 
-      <!-- ââ PROFILE TAB ââ -->
-      <div class="tab-content" id="tab-profile">
-        <div class="profile-section">
-          <div class="profile-avatar-wrap">
-            <img id="profile-photo" class="profile-avatar" src="" alt=""/>
-            <div class="profile-username" id="profile-username"></div>
-            <div class="profile-email" id="profile-email"></div>
-          </div>
-
-          <div class="profile-cards">
-            <div class="profile-card">
-              <div class="pc-icon">ð°</div>
-              <div class="pc-val" id="profile-balance">0.000000 Î±</div>
-              <div class="pc-lbl">Ø§ÙØ±ØµÙØ¯ Ø§ÙØ­Ø§ÙÙ</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">â</div>
-              <div class="pc-val" id="profile-total">0.000000 Î±</div>
-              <div class="pc-lbl">Ø¥Ø¬ÙØ§ÙÙ Ø§ÙØªØ¹Ø¯ÙÙ</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">â¡</div>
-              <div class="pc-val" id="profile-power">1 Î±/Ø³Ø§Ø¹Ø©</div>
-              <div class="pc-lbl">ÙÙØ© Ø§ÙØªØ¹Ø¯ÙÙ</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">â±</div>
-              <div class="pc-val" id="profile-duration">3 Ø³Ø§Ø¹Ø§Øª</div>
-              <div class="pc-lbl">Ø§ÙÙØ¯Ø© Ø§ÙÙØµÙÙ</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">ð</div>
-              <div class="pc-val" id="profile-per-sec">+0.00000028 Î±/Ø«</div>
-              <div class="pc-lbl">ÙØ¹Ø¯Ù/Ø«Ø§ÙÙØ©</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">ð</div>
-              <div class="pc-val" id="profile-last-claim">â</div>
-              <div class="pc-lbl">Ø¢Ø®Ø± Ø¬ÙÙ ÙÙØ£Ø±Ø¨Ø§Ø­</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">ð</div>
-              <div class="pc-val" id="profile-power-level">Ø§ÙÙØ³ØªÙÙ 1</div>
-              <div class="pc-lbl">ÙØ³ØªÙÙ Ø§ÙÙÙØ©</div>
-            </div>
-            <div class="profile-card">
-              <div class="pc-icon">ð</div>
-              <div class="pc-val" id="profile-dur-level">Ø§ÙÙØ³ØªÙÙ 1</div>
-              <div class="pc-lbl">ÙØ³ØªÙÙ Ø§ÙÙØ¯Ø©</div>
+      <!-- Tab: Earn -->
+      <div id="tab-earn" class="tab-content">
+        <!-- Daily bonus info -->
+        <div class="earn-section">
+          <div class="earn-section-title">📅 المكافأة اليومية</div>
+          <div class="earn-info-card">
+            <div class="earn-info-icon">🔥</div>
+            <div>
+              <div class="earn-info-main">احضر كل يوم للحصول على مكافأة تتضاعف</div>
+              <div class="earn-info-sub">السلسلة تزيد كل يوم متتالي <span id="streak-badge-earn"></span></div>
             </div>
           </div>
         </div>
+
+        <!-- Referral section -->
+        <div class="earn-section" id="referral-section">
+          <div class="earn-section-title">👥 نظام الإحالة</div>
+          <div class="earn-info-card">
+            <div>
+              <div class="earn-info-main">شارك كودك واحصل على مكافأة لكل صديق يسجل</div>
+              <div class="referral-code-wrap">
+                <span class="referral-code-label">كودك:</span>
+                <span id="referral-code-display" class="referral-code">———</span>
+                <button id="copy-referral-btn" class="copy-btn">📋 نسخ</button>
+              </div>
+            </div>
+          </div>
+          <div id="referral-input-wrap" class="input-row" style="display:flex">
+            <input id="referral-input" class="inp" placeholder="أدخل كود إحالة صديق" maxlength="12"/>
+            <button id="referral-apply-btn" class="btn-primary">تطبيق</button>
+          </div>
+          <div id="referral-used" class="coupon-msg ok" style="display:none">✅ استخدمت كود إحالة من قبل</div>
+          <div id="referral-msg" class="coupon-msg"></div>
+        </div>
+
+        <!-- Coupon section -->
+        <div class="earn-section">
+          <div class="earn-section-title">🎟 كود المكافأة</div>
+          <div class="input-row">
+            <input id="coupon-input" class="inp" placeholder="أدخل الكود" maxlength="30"/>
+            <button id="coupon-btn" class="btn-primary">استخدام</button>
+          </div>
+          <div id="coupon-msg" class="coupon-msg"></div>
+        </div>
       </div>
 
+      <!-- Tab: Leaderboard -->
+      <div id="tab-leaderboard" class="tab-content">
+        <div class="tab-section-title">🏆 أفضل 10 مستخدمين</div>
+        <div id="leaderboard-list" class="leaderboard-list">
+          <div class="lb-empty">جار التحميل…</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast"></div>
-  <script type="module" src="script.js"></script>
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script type="module" src="script.js"></script>
   </body>
   </html>
