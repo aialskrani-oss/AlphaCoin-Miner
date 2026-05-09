@@ -350,11 +350,6 @@ async function loadProfile() {
   } catch {}
 }
 
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-
 // ── Helpers ────────────────────────────────────────────────────
 function setErr(el, msg) { el.textContent = msg; }
 function clearErr() { setErr(loginErr,""); setErr(regErr,""); }
