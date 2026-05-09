@@ -14,6 +14,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getDatabase(app);
-export const ADMIN_EMAIL = "aialskrani@gmail.com";
-export const ADMIN_PHONE = "PENDING";
+export const db   = getDatabase(app);
+
+// اسم مستخدم الأدمن — تغييره حسب ما تريد
+export const ADMIN_USERNAME = "alpha_admin";
