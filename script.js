@@ -1,8 +1,8 @@
 import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   import {
     GoogleAuthProvider,
-    signInWithRedirect,
     signInWithPopup,
+    signInWithRedirect,
     getRedirectResult,
     signOut,
     onAuthStateChanged
@@ -71,67 +71,97 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   let currentUser = null;
   let userData    = null;
   const googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: "select_account" });
 
   function isMobile() {
     return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   }
 
-  // ── Google Login ───────────────────────────────────────────────
+  // ── INIT: resolve redirect result first, then listen for auth ──
+  async function init() {
+    // Step 1: Check for a pending redirect result.
+    // This MUST complete before we react to onAuthStateChanged,
+    // otherwise we may see null-user briefly after a redirect login.
+    try {
+      const result = await getRedirectResult(auth);
+      if (result?.user) {
+        // Redirect sign-in succeeded — onAuthStateChanged will fire next
+        console.log("Redirect OK:", result.user.email);
+      }
+    } catch (e) {
+      console.error("Redirect error:", e.code, e.message);
+      // Only show error when it's a real failure (not a fresh load)
+      if (e.code && e.code !== "auth/no-redirect-operation") {
+        loadingEl.style.display = "none";
+        authScreen.style.display = "flex";
+        authErr.textContent = getAuthErrMsg(e);
+        resetLoginBtn();
+      }
+      return; // Stop here — auth will not proceed
+    }
+
+    // Step 2: Now listen for auth state changes
+    onAuthStateChanged(auth, async user => {
+      loadingEl.style.display = "none";
+      if (user) {
+        currentUser = user;
+        authScreen.style.display    = "none";
+        gameContainer.style.display = "flex";
+        await ensureUserRecord(user);
+        listenUserData(user.uid);
+      } else {
+        currentUser = null;
+        userData    = null;
+        gameContainer.style.display = "none";
+        authScreen.style.display    = "flex";
+        resetLoginBtn();
+      }
+    });
+  }
+
+  init();
+
+  // ── Login button ───────────────────────────────────────────────
   googleLoginBtn.addEventListener("click", async () => {
-    googleLoginBtn.disabled = true;
+    googleLoginBtn.disabled   = true;
     googleLoginBtn.textContent = "جار الدخول…";
     authErr.textContent = "";
     try {
       if (isMobile()) {
+        // On mobile redirect is more reliable than popup
         await signInWithRedirect(auth, googleProvider);
+        // Page will reload — nothing after this line runs
       } else {
         await signInWithPopup(auth, googleProvider);
       }
     } catch (e) {
+      console.error("Login error:", e.code, e.message);
       if (e.code === "auth/popup-blocked") {
+        // Popup blocked → fall back to redirect
         await signInWithRedirect(auth, googleProvider);
         return;
       }
-      const msgs = {
-        "auth/popup-closed-by-user":    "أُغلقت النافذة قبل اكتمال الدخول",
-        "auth/cancelled-popup-request": "تم إلغاء الطلب",
-        "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
-      };
-      authErr.textContent = msgs[e.code] || ("خطأ: " + e.message);
-      googleLoginBtn.disabled = false;
-      googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
+      authErr.textContent = getAuthErrMsg(e);
+      resetLoginBtn();
     }
   });
 
-  // ── Handle redirect result ─────────────────────────────────────
-  getRedirectResult(auth).then(result => {
-    // Result handled by onAuthStateChanged — nothing to do here
-  }).catch(e => {
-    // Silently ignore "no pending redirect" (normal on fresh load)
-    // For real errors, log to console only — don't scare the user
-    if (e.code !== "auth/no-redirect-operation") {
-      console.warn("Redirect result error:", e.code, e.message);
-    }
-  });
+  function resetLoginBtn() {
+    googleLoginBtn.disabled = false;
+    googleLoginBtn.innerHTML =
+      `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
+  }
 
-  // ── Auth state ─────────────────────────────────────────────────
-  onAuthStateChanged(auth, async user => {
-    loadingEl.style.display = "none";
-    if (user) {
-      currentUser = user;
-      authScreen.style.display    = "none";
-      gameContainer.style.display = "flex";
-      await ensureUserRecord(user);
-      listenUserData(user.uid);
-    } else {
-      currentUser = null;
-      userData    = null;
-      authScreen.style.display    = "flex";
-      gameContainer.style.display = "none";
-      googleLoginBtn.disabled = false;
-      googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
-    }
-  });
+  function getAuthErrMsg(e) {
+    const map = {
+      "auth/popup-closed-by-user":    "أُغلقت نافذة الدخول",
+      "auth/cancelled-popup-request": "تم إلغاء الطلب",
+      "auth/network-request-failed":  "خطأ في الاتصال",
+      "auth/user-disabled":           "هذا الحساب معطّل",
+      "auth/internal-error":          "خطأ داخلي — تحقق من إعدادات Firebase",
+    };
+    return map[e.code] || ("خطأ: " + (e.message || e.code));
+  }
 
   logoutBtn.addEventListener("click", () => signOut(auth));
 
@@ -163,7 +193,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       updateBalanceUI();
       userNameEl.textContent = userData.username || "";
       if (userData.photoURL) {
-        userPhotoEl.src          = userData.photoURL;
+        userPhotoEl.src           = userData.photoURL;
         userPhotoEl.style.display = "block";
       }
       if (adminBtnWrap)
@@ -311,7 +341,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     document.getElementById("profile-balance").textContent = (userData.balance    || 0).toFixed(4);
     document.getElementById("profile-total").textContent   = (userData.totalMined || 0).toFixed(4);
     const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount || 0) : 0;
-    document.getElementById("profile-daily").textContent   = `${count}/50`;
+    document.getElementById("profile-daily").textContent = `${count}/50`;
     try {
       const snap = await get(ref(db, "users"));
       if (snap.exists()) {
