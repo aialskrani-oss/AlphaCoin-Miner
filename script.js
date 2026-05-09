@@ -2,8 +2,8 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   import {
     GoogleAuthProvider,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
+    browserLocalPersistence,
+    setPersistence,
     signOut,
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -73,75 +73,38 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   const googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({ prompt: "select_account" });
 
-  function isMobile() {
-    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  }
-
-  // ── INIT: resolve redirect result first, then listen for auth ──
-  async function init() {
-    // Step 1: Check for a pending redirect result.
-    // This MUST complete before we react to onAuthStateChanged,
-    // otherwise we may see null-user briefly after a redirect login.
-    try {
-      const result = await getRedirectResult(auth);
-      if (result?.user) {
-        // Redirect sign-in succeeded — onAuthStateChanged will fire next
-        console.log("Redirect OK:", result.user.email);
-      }
-    } catch (e) {
-      console.error("Redirect error:", e.code, e.message);
-      // Only show error when it's a real failure (not a fresh load)
-      if (e.code && e.code !== "auth/no-redirect-operation") {
-        loadingEl.style.display = "none";
-        authScreen.style.display = "flex";
-        authErr.textContent = getAuthErrMsg(e);
-        resetLoginBtn();
-      }
-      return; // Stop here — auth will not proceed
+  // ── Auth state ─────────────────────────────────────────────────
+  onAuthStateChanged(auth, async user => {
+    loadingEl.style.display = "none";
+    if (user) {
+      currentUser = user;
+      authScreen.style.display    = "none";
+      gameContainer.style.display = "flex";
+      await ensureUserRecord(user);
+      listenUserData(user.uid);
+    } else {
+      currentUser = null;
+      userData    = null;
+      gameContainer.style.display = "none";
+      authScreen.style.display    = "flex";
+      resetLoginBtn();
     }
+  });
 
-    // Step 2: Now listen for auth state changes
-    onAuthStateChanged(auth, async user => {
-      loadingEl.style.display = "none";
-      if (user) {
-        currentUser = user;
-        authScreen.style.display    = "none";
-        gameContainer.style.display = "flex";
-        await ensureUserRecord(user);
-        listenUserData(user.uid);
-      } else {
-        currentUser = null;
-        userData    = null;
-        gameContainer.style.display = "none";
-        authScreen.style.display    = "flex";
-        resetLoginBtn();
-      }
-    });
-  }
-
-  init();
-
-  // ── Login button ───────────────────────────────────────────────
+  // ── Google Login (popup on ALL devices) ───────────────────────
   googleLoginBtn.addEventListener("click", async () => {
-    googleLoginBtn.disabled   = true;
+    googleLoginBtn.disabled    = true;
     googleLoginBtn.textContent = "جار الدخول…";
     authErr.textContent = "";
     try {
-      if (isMobile()) {
-        // On mobile redirect is more reliable than popup
-        await signInWithRedirect(auth, googleProvider);
-        // Page will reload — nothing after this line runs
-      } else {
-        await signInWithPopup(auth, googleProvider);
-      }
+      // Force localStorage persistence so auth survives page refreshes
+      await setPersistence(auth, browserLocalPersistence);
+      // Popup works on Android Chrome (opens as Chrome Custom Tab on mobile)
+      await signInWithPopup(auth, googleProvider);
+      // onAuthStateChanged will handle showing the game
     } catch (e) {
       console.error("Login error:", e.code, e.message);
-      if (e.code === "auth/popup-blocked") {
-        // Popup blocked → fall back to redirect
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-      authErr.textContent = getAuthErrMsg(e);
+      authErr.textContent = getErrMsg(e);
       resetLoginBtn();
     }
   });
@@ -152,15 +115,15 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
   }
 
-  function getAuthErrMsg(e) {
-    const map = {
-      "auth/popup-closed-by-user":    "أُغلقت نافذة الدخول",
+  function getErrMsg(e) {
+    return {
+      "auth/popup-closed-by-user":    "أُغلقت نافذة الدخول — حاول مرة أخرى",
+      "auth/popup-blocked":           "المتصفح حجب النافذة — اسمح بالنوافذ المنبثقة للموقع",
       "auth/cancelled-popup-request": "تم إلغاء الطلب",
-      "auth/network-request-failed":  "خطأ في الاتصال",
+      "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
       "auth/user-disabled":           "هذا الحساب معطّل",
-      "auth/internal-error":          "خطأ داخلي — تحقق من إعدادات Firebase",
-    };
-    return map[e.code] || ("خطأ: " + (e.message || e.code));
+      "auth/internal-error":          "خطأ في إعدادات Firebase — راجع Google Cloud Console",
+    }[e.code] || ("خطأ: " + (e.message || e.code));
   }
 
   logoutBtn.addEventListener("click", () => signOut(auth));
@@ -218,7 +181,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     mineBtn.disabled         = left <= 0;
   }
 
-  // ── Date helper ────────────────────────────────────────────────
   function todayStr() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -232,16 +194,13 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const sameDay  = userData.lastMineDate === todayKey;
     const dailyC   = sameDay ? (userData.dailyMineCount || 0) : 0;
     if (dailyC >= 50) { showToast("وصلت للحد اليومي (50 عملية)", "err"); return; }
-
     const reward   = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
     const newBal   = parseFloat(((userData.balance    || 0) + reward).toFixed(4));
     const newTotal = parseFloat(((userData.totalMined || 0) + reward).toFixed(4));
     try {
       await update(ref(db, `users/${currentUser.uid}`), {
-        balance:        newBal,
-        totalMined:     newTotal,
-        lastMineDate:   todayKey,
-        dailyMineCount: dailyC + 1
+        balance: newBal, totalMined: newTotal,
+        lastMineDate: todayKey, dailyMineCount: dailyC + 1
       });
       spawnReward(`+α${reward.toFixed(4)}`);
       showToast(`+α${reward.toFixed(4)} تم التعدين!`);
@@ -316,13 +275,13 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
         const isYou = currentUser && u.uid === currentUser.uid;
         return `<tr class="${isYou ? "lb-you" : ""}">
           <td><span class="lb-rank ${cls}">${medal}</span></td>
-          <td><div class="lb-name-cell">⚡ ${u.username || "مجهول"}${isYou ? " <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</div></td>
+          <td>⚡ ${u.username || "مجهول"}${isYou ? " <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</td>
           <td><span class="lb-balance">α${(u.balance || 0).toFixed(4)}</span></td>
           <td style="color:#888">α${(u.totalMined || 0).toFixed(4)}</td>
         </tr>`;
       }).join("");
     } catch (e) {
-      lbBody.innerHTML = `<tr><td colspan="4" style="color:var(--danger);text-align:center;padding:1rem">${e.message}</td></tr>`;
+      lbBody.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center;padding:1rem">${e.message}</td></tr>`;
     }
   }
 
@@ -332,8 +291,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const photoEl    = document.getElementById("profile-photo");
     const fallbackEl = document.getElementById("profile-avatar-fallback");
     if (userData.photoURL) {
-      photoEl.src              = userData.photoURL;
-      photoEl.style.display    = "block";
+      photoEl.src = userData.photoURL; photoEl.style.display = "block";
       fallbackEl.style.display = "none";
     }
     document.getElementById("profile-name").textContent    = userData.username || currentUser.displayName || "";
@@ -341,7 +299,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     document.getElementById("profile-balance").textContent = (userData.balance    || 0).toFixed(4);
     document.getElementById("profile-total").textContent   = (userData.totalMined || 0).toFixed(4);
     const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount || 0) : 0;
-    document.getElementById("profile-daily").textContent = `${count}/50`;
+    document.getElementById("profile-daily").textContent   = `${count}/50`;
     try {
       const snap = await get(ref(db, "users"));
       if (snap.exists()) {
