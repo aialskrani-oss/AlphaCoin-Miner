@@ -1,6 +1,6 @@
 import { auth, db, ADMIN_EMAIL } from "./firebase-config.js";
 import {
-  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   ref, get, set, update, onValue, query, orderByChild, limitToLast
@@ -78,14 +78,25 @@ let userData    = null;
 
 btnLogin.addEventListener("click", async () => {
   try {
+    btnLogin.disabled = true;
+    btnLogin.textContent = "جار التحويل…";
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch (e) {
+    btnLogin.disabled = false;
+    btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
     showToast("فشل تسجيل الدخول: " + e.message, "err");
   }
 });
 
 btnLogout.addEventListener("click", () => signOut(auth));
+
+// ── Handle redirect result on page load ────────────────────────
+getRedirectResult(auth).catch(e => {
+  if (e && e.code !== "auth/no-auth-event") {
+    showToast("خطأ في تسجيل الدخول: " + e.message, "err");
+  }
+});
 
 onAuthStateChanged(auth, async user => {
   loadingEl.style.display = "none";
