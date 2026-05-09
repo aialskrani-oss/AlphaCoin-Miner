@@ -6,27 +6,42 @@
     <title>لوحة الأدمن | AlphaCoin</title>
     <link rel="stylesheet" href="style.css"/>
     <style>
-      body{background:#0a0a0f;color:#e0e0e0;font-family:sans-serif;padding:0;margin:0}
+      body{background:#0a0a0f;color:#e0e0e0;font-family:'Cairo',sans-serif;padding:0;margin:0}
       #admin-loading{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:1.2rem;color:#888}
-      #admin-panel{display:none;max-width:900px;margin:0 auto;padding:1.5rem}
+      #admin-panel{display:none;max-width:960px;margin:0 auto;padding:1.5rem}
       .admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;border-bottom:1px solid #2a2a3a;padding-bottom:1rem}
-      .admin-header h1{color:var(--gold,#ffd700);font-size:1.5rem;margin:0}
+      .admin-header h1{color:#ffd700;font-size:1.5rem;margin:0}
       .admin-section{background:#12121a;border:1px solid #2a2a3a;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
-      .admin-section h2{margin:0 0 1rem;color:var(--primary,#00d4ff);font-size:1rem}
-      .form-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem}
-      .inp{background:#1a1a2e;border:1px solid #333;border-radius:8px;color:#e0e0e0;padding:.6rem .9rem;flex:1;min-width:160px;font-size:.95rem}
-      .inp:focus{outline:none;border-color:var(--primary,#00d4ff)}
-      .btn-gold{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;border:none;border-radius:8px;padding:.6rem 1.2rem;font-weight:700;cursor:pointer;white-space:nowrap}
+      .admin-section h2{margin:0 0 1rem;color:#00d4ff;font-size:1rem;border-bottom:1px solid #2a2a3a;padding-bottom:.6rem}
+      .form-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem;align-items:flex-end}
+      .inp{background:#1a1a2e;border:1px solid #333;border-radius:8px;color:#e0e0e0;padding:.6rem .9rem;flex:1;min-width:140px;font-size:.95rem;font-family:'Cairo',sans-serif}
+      .inp:focus{outline:none;border-color:#00d4ff}
+      .inp-label{font-size:.8rem;color:#888;margin-bottom:.3rem;display:block}
+      .field-group{display:flex;flex-direction:column;flex:1;min-width:140px}
+      .btn-gold{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;border:none;border-radius:8px;padding:.6rem 1.2rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Cairo',sans-serif;font-size:.9rem}
       .btn-gold:disabled{opacity:.5;cursor:not-allowed}
-      .btn-danger{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-weight:700;cursor:pointer}
+      .btn-danger{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif}
+      .btn-blue{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:8px;padding:.6rem 1.2rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.9rem}
+      .btn-purple{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:.6rem 1.2rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.9rem}
       .admin-msg{margin-top:.6rem;font-size:.9rem;min-height:1.2em}
       .admin-msg.ok{color:#22c55e}.admin-msg.err{color:#ef4444}
-      .users-table{width:100%;border-collapse:collapse;font-size:.88rem}
-      .users-table th{color:#888;padding:.5rem;text-align:right;border-bottom:1px solid #2a2a3a}
-      .users-table td{padding:.5rem;border-bottom:1px solid #1e1e2e;vertical-align:middle}
-      .badge-active{background:#15803d;color:#fff;border-radius:4px;padding:2px 6px;font-size:.78rem}
-      .badge-used{background:#374151;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:.78rem}
-      @media(max-width:500px){.form-row{flex-direction:column}}
+      .users-table{width:100%;border-collapse:collapse;font-size:.85rem}
+      .users-table th{color:#888;padding:.5rem .4rem;text-align:right;border-bottom:1px solid #2a2a3a;white-space:nowrap}
+      .users-table td{padding:.5rem .4rem;border-bottom:1px solid #1e1e2e;vertical-align:middle}
+      .badge-active{background:#15803d;color:#fff;border-radius:4px;padding:2px 6px;font-size:.75rem}
+      .badge-used{background:#374151;color:#9ca3af;border-radius:4px;padding:2px 6px;font-size:.75rem}
+      .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:.5rem}
+      .stat-box{background:#0d0d1a;border:1px solid #2a2a3a;border-radius:10px;padding:1rem;text-align:center}
+      .stat-box .val{font-size:1.6rem;font-weight:700;color:#f0b429}
+      .stat-box .lbl{font-size:.78rem;color:#666;margin-top:.3rem}
+      .user-edit-form{background:#0d0d1a;border:1px solid #2a2a4a;border-radius:10px;padding:1.2rem;margin-top:1rem;display:none}
+      .user-edit-form.visible{display:block}
+      .edit-title{font-size:.9rem;color:#00d4ff;margin-bottom:.8rem;font-weight:700}
+      @media(max-width:500px){.form-row{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+      .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#e0e0e0;padding:.7rem 1.4rem;border-radius:10px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;font-family:'Cairo',sans-serif}
+      .toast.show{opacity:1}
+      .toast.ok{border-left:4px solid #22c55e}
+      .toast.err{border-left:4px solid #ef4444}
     </style>
   </head>
   <body>
@@ -38,51 +53,101 @@
       <div style="display:flex;gap:.8rem;align-items:center">
         <span id="admin-user-label" style="color:#888;font-size:.9rem"></span>
         <button class="btn-danger" id="admin-logout">خروج</button>
-        <a href="/" style="color:#888;font-size:.9rem">← الرئيسية</a>
+        <a href="/" style="color:#888;font-size:.9rem;text-decoration:none">← الرئيسية</a>
       </div>
     </div>
 
     <!-- Stats -->
     <div class="admin-section">
       <h2>📊 إحصائيات سريعة</h2>
-      <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
-        <div><div style="font-size:2rem;font-weight:700;color:var(--gold,#ffd700)" id="stat-users">-</div><div style="color:#888;font-size:.85rem">مستخدم</div></div>
-        <div><div style="font-size:2rem;font-weight:700;color:var(--primary,#00d4ff)" id="stat-total">-</div><div style="color:#888;font-size:.85rem">إجمالي α</div></div>
-        <div><div style="font-size:2rem;font-weight:700;color:#22c55e" id="stat-coupons">-</div><div style="color:#888;font-size:.85rem">قسيمة نشطة</div></div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="val" id="stat-users">—</div><div class="lbl">إجمالي المستخدمين</div></div>
+        <div class="stat-box"><div class="val" id="stat-total-mined">—</div><div class="lbl">إجمالي التعدين (α)</div></div>
+        <div class="stat-box"><div class="val" id="stat-coupons">—</div><div class="lbl">الكوبونات النشطة</div></div>
+        <div class="stat-box"><div class="val" id="stat-avg-power">—</div><div class="lbl">متوسط قوة التعدين</div></div>
       </div>
     </div>
 
-    <!-- Create coupon -->
+    <!-- User Management -->
     <div class="admin-section">
-      <h2>🎁 إنشاء قسيمة</h2>
+      <h2>👤 تعديل بيانات مستخدم</h2>
       <div class="form-row">
-        <input class="inp" id="new-coupon-code"   type="text"   placeholder="كود القسيمة (اتركه فارغاً للتوليد)" style="direction:ltr"/>
-        <input class="inp" id="new-coupon-reward" type="number" placeholder="المكافأة (α)" min="0.01" step="0.01" value="5"/>
-        <button class="btn-gold" id="create-coupon-btn">إنشاء</button>
+        <div class="field-group">
+          <label class="inp-label">UID أو اسم المستخدم</label>
+          <input class="inp" id="search-uid" placeholder="UID أو username…"/>
+        </div>
+        <button class="btn-blue" id="search-user-btn">🔍 بحث</button>
       </div>
-      <div class="admin-msg" id="coupon-create-msg"></div>
+      <div class="admin-msg" id="search-msg"></div>
+
+      <div class="user-edit-form" id="user-edit-form">
+        <div class="edit-title" id="edit-user-title">تعديل المستخدم</div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="inp-label">الرصيد (α)</label>
+            <input class="inp" id="edit-balance" type="number" step="0.0001" min="0"/>
+          </div>
+          <div class="field-group">
+            <label class="inp-label">إجمالي التعدين (α)</label>
+            <input class="inp" id="edit-total-mined" type="number" step="0.0001" min="0"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="inp-label">قوة التعدين (α/ساعة)</label>
+            <input class="inp" id="edit-mining-power" type="number" step="1" min="1"/>
+          </div>
+          <div class="field-group">
+            <label class="inp-label">مستوى قوة التعدين (1-5)</label>
+            <input class="inp" id="edit-power-level" type="number" step="1" min="1" max="5"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label class="inp-label">مدة التعدين القصوى (ساعات)</label>
+            <input class="inp" id="edit-duration" type="number" step="1" min="1"/>
+          </div>
+          <div class="field-group">
+            <label class="inp-label">مستوى المدة (1-4)</label>
+            <input class="inp" id="edit-duration-level" type="number" step="1" min="1" max="4"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <button class="btn-gold" id="save-user-btn">💾 حفظ التعديلات</button>
+          <button class="btn-purple" id="free-upgrade-btn">🎁 ترقية مجانية للمستوى الأعلى</button>
+          <button class="btn-danger" id="reset-user-btn">🔄 إعادة ضبط التعدين</button>
+        </div>
+        <div class="admin-msg" id="edit-msg"></div>
+      </div>
     </div>
 
-    <!-- Coupons table -->
+    <!-- Coupon Management -->
     <div class="admin-section">
-      <h2>📋 القسائم الحالية</h2>
-      <div style="overflow-x:auto">
-        <table class="users-table" id="coupons-table">
-          <thead><tr><th>الكود</th><th>المكافأة</th><th>الحالة</th><th>الاستخدامات</th><th>إجراء</th></tr></thead>
-          <tbody id="coupons-body"><tr><td colspan="5" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr></tbody>
-        </table>
+      <h2>🎟 إنشاء قسيمة جديدة</h2>
+      <div class="form-row">
+        <div class="field-group">
+          <label class="inp-label">كود القسيمة</label>
+          <input class="inp" id="coupon-code" placeholder="ALPHA2025…" style="text-transform:uppercase"/>
+        </div>
+        <div class="field-group">
+          <label class="inp-label">المكافأة (α)</label>
+          <input class="inp" id="coupon-reward" type="number" min="0.0001" step="0.0001" placeholder="10"/>
+        </div>
+        <button class="btn-gold" id="create-coupon-btn">➕ إنشاء</button>
       </div>
+      <div class="admin-msg" id="coupon-msg"></div>
     </div>
 
-    <!-- Users table -->
+    <!-- Coupons List -->
     <div class="admin-section">
-      <h2>👥 المستخدمون</h2>
-      <div style="overflow-x:auto">
-        <table class="users-table">
-          <thead><tr><th>المستخدم</th><th>البريد</th><th>الرصيد (α)</th><th>الإجمالي</th></tr></thead>
-          <tbody id="users-body"><tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr></tbody>
-        </table>
-      </div>
+      <h2>📋 قائمة الكوبونات</h2>
+      <div id="coupons-table-wrap"><div style="color:#666">جار التحميل…</div></div>
+    </div>
+
+    <!-- Users List -->
+    <div class="admin-section">
+      <h2>👥 قائمة المستخدمين</h2>
+      <div id="users-table-wrap"><div style="color:#666">جار التحميل…</div></div>
     </div>
   </div>
 
