@@ -1,55 +1,59 @@
-import { auth, db, ADMIN_EMAIL } from "./firebase-config.js";
+import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
 import {
-  RecaptchaVerifier, signInWithPhoneNumber, signOut, onAuthStateChanged
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
-  ref, get, set, update, onValue
+  ref, get, set, update, onValue, query, orderByChild, equalTo
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// ── DOM refs ──────────────────────────────────────────────────
-const loadingEl     = document.getElementById("loading");
-const authScreen    = document.getElementById("auth-screen");
-const mainScreen    = document.getElementById("main-screen");
-const stepPhone     = document.getElementById("step-phone");
-const stepOtp       = document.getElementById("step-otp");
-const countryCode   = document.getElementById("country-code");
-const phoneInp      = document.getElementById("phone-inp");
-const sendOtpBtn    = document.getElementById("send-otp-btn");
-const phoneMsg      = document.getElementById("phone-msg");
-const otpHint       = document.getElementById("otp-hint");
-const verifyBtn     = document.getElementById("verify-btn");
-const otpMsg        = document.getElementById("otp-msg");
-const backBtn       = document.getElementById("back-btn");
-const otpBoxes      = document.querySelectorAll(".otp-inp");
-const navName       = document.getElementById("nav-name");
-const btnLogout     = document.getElementById("btn-logout");
-const balanceVal    = document.getElementById("balance-val");
-const totalMined    = document.getElementById("total-mined");
-const dailyCount    = document.getElementById("daily-count");
-const minesLeft     = document.getElementById("mines-left");
-const mineBtn       = document.getElementById("mine-btn");
-const couponInp     = document.getElementById("coupon-inp");
-const couponBtn     = document.getElementById("coupon-btn");
-const couponMsg     = document.getElementById("coupon-msg");
-const lbBody        = document.getElementById("lb-body");
-const profileName   = document.getElementById("profile-name");
-const profileEmail  = document.getElementById("profile-email");
-const profileBal    = document.getElementById("profile-balance");
-const profileTotal  = document.getElementById("profile-total");
-const profileDaily  = document.getElementById("profile-daily");
-const profileRank   = document.getElementById("profile-rank");
-const adminBtnWrap  = document.getElementById("admin-btn-wrap");
-const toastEl       = document.getElementById("toast");
+const DOMAIN = "@alphacoin.app";
+
+// ── DOM ────────────────────────────────────────────────────────
+const loadingEl    = document.getElementById("loading");
+const authScreen   = document.getElementById("auth-screen");
+const mainScreen   = document.getElementById("main-screen");
+const loginUser    = document.getElementById("login-user");
+const loginPass    = document.getElementById("login-pass");
+const loginBtn     = document.getElementById("login-btn");
+const loginErr     = document.getElementById("login-err");
+const regUser      = document.getElementById("reg-user");
+const regCc        = document.getElementById("reg-cc");
+const regPhone     = document.getElementById("reg-phone");
+const regPass      = document.getElementById("reg-pass");
+const regPass2     = document.getElementById("reg-pass2");
+const regBtn       = document.getElementById("reg-btn");
+const regErr       = document.getElementById("reg-err");
+const navName      = document.getElementById("nav-name");
+const btnLogout    = document.getElementById("btn-logout");
+const balanceVal   = document.getElementById("balance-val");
+const totalMined   = document.getElementById("total-mined");
+const dailyCount   = document.getElementById("daily-count");
+const minesLeft    = document.getElementById("mines-left");
+const mineBtn      = document.getElementById("mine-btn");
+const couponInp    = document.getElementById("coupon-inp");
+const couponBtn    = document.getElementById("coupon-btn");
+const couponMsg    = document.getElementById("coupon-msg");
+const lbBody       = document.getElementById("lb-body");
+const profileName  = document.getElementById("profile-name");
+const profilePhone = document.getElementById("profile-phone");
+const profileBal   = document.getElementById("profile-balance");
+const profileTotal = document.getElementById("profile-total");
+const profileDaily = document.getElementById("profile-daily");
+const profileRank  = document.getElementById("profile-rank");
+const adminBtnWrap = document.getElementById("admin-btn-wrap");
+const toastEl      = document.getElementById("toast");
 
 // ── Particles ─────────────────────────────────────────────────
-(function spawnParticles() {
-  const container = document.getElementById("particles");
-  for (let i = 0; i < 30; i++) {
+(function() {
+  const c = document.getElementById("particles");
+  for (let i = 0; i < 25; i++) {
     const p = document.createElement("div");
     p.className = "particle";
-    const size = Math.random() * 4 + 1;
-    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100+100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
-    container.appendChild(p);
+    const s = Math.random() * 3 + 1;
+    p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;top:${Math.random()*100+100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*12}s;`;
+    c.appendChild(p);
   }
 })();
 
@@ -62,7 +66,28 @@ function showToast(msg, type = "ok") {
   toastTimer = setTimeout(() => toastEl.className = "toast", 2800);
 }
 
-// ── Tabs ───────────────────────────────────────────────────────
+// ── Auth tabs ──────────────────────────────────────────────────
+document.querySelectorAll(".auth-tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".auth-tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.atab;
+    document.getElementById("atab-login").style.display    = tab === "login"    ? "flex" : "none";
+    document.getElementById("atab-register").style.display = tab === "register" ? "flex" : "none";
+    clearErr();
+  });
+});
+
+// ── Password toggle ────────────────────────────────────────────
+document.querySelectorAll(".pass-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const inp = document.getElementById(btn.dataset.target);
+    inp.type = inp.type === "password" ? "text" : "password";
+    btn.textContent = inp.type === "password" ? "👁" : "🙈";
+  });
+});
+
+// ── App tabs ───────────────────────────────────────────────────
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -70,125 +95,77 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
     if (btn.dataset.tab === "leaderboard") loadLeaderboard();
-    if (btn.dataset.tab === "profile") loadProfile();
+    if (btn.dataset.tab === "profile")     loadProfile();
   });
 });
 
 // ── State ──────────────────────────────────────────────────────
-let currentUser       = null;
-let userData          = null;
-let confirmationResult = null;
-let recaptchaVerifier  = null;
+let currentUser = null;
+let userData    = null;
 
-// ── reCAPTCHA setup ────────────────────────────────────────────
-function initRecaptcha() {
-  if (recaptchaVerifier) return;
-  recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-    size: "invisible",
-    callback: () => {},
-    "expired-callback": () => { recaptchaVerifier = null; }
-  });
+// ── Login ──────────────────────────────────────────────────────
+loginBtn.addEventListener("click", doLogin);
+loginPass.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+loginUser.addEventListener("keydown", e => { if (e.key === "Enter") loginPass.focus(); });
+
+async function doLogin() {
+  const username = loginUser.value.trim().toLowerCase();
+  const password = loginPass.value;
+  if (!username) { setErr(loginErr, "أدخل اسم المستخدم"); return; }
+  if (!password) { setErr(loginErr, "أدخل كلمة المرور"); return; }
+
+  setErr(loginErr, "");
+  loginBtn.disabled = true;
+  loginBtn.textContent = "جار الدخول…";
+
+  try {
+    await signInWithEmailAndPassword(auth, username + DOMAIN, password);
+  } catch (e) {
+    setErr(loginErr, authError(e.code));
+    loginBtn.disabled = false;
+    loginBtn.textContent = "دخول ⚡";
+  }
 }
 
-// ── OTP box UX ────────────────────────────────────────────────
-otpBoxes.forEach((box, idx) => {
-  box.addEventListener("input", () => {
-    box.value = box.value.replace(/\D/g, "").slice(-1);
-    box.classList.toggle("filled", box.value !== "");
-    if (box.value && idx < otpBoxes.length - 1) otpBoxes[idx + 1].focus();
-    if (getOtpCode().length === 6) verifyOtp();
-  });
-  box.addEventListener("keydown", e => {
-    if (e.key === "Backspace" && !box.value && idx > 0) {
-      otpBoxes[idx - 1].value = "";
-      otpBoxes[idx - 1].classList.remove("filled");
-      otpBoxes[idx - 1].focus();
-    }
-  });
-  box.addEventListener("paste", e => {
-    e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 6);
-    [...text].forEach((ch, i) => {
-      if (otpBoxes[i]) { otpBoxes[i].value = ch; otpBoxes[i].classList.add("filled"); }
+// ── Register ───────────────────────────────────────────────────
+regBtn.addEventListener("click", doRegister);
+regPass2.addEventListener("keydown", e => { if (e.key === "Enter") doRegister(); });
+
+async function doRegister() {
+  const username = regUser.value.trim().toLowerCase();
+  const phone    = (regCc.value + regPhone.value.replace(/\D/g,"").replace(/^0+/,"")).trim();
+  const password = regPass.value;
+  const password2= regPass2.value;
+
+  if (!username || username.length < 3) { setErr(regErr, "اسم المستخدم 3 أحرف على الأقل"); return; }
+  if (!/^[a-z0-9_]+$/.test(username))  { setErr(regErr, "اسم المستخدم: أحرف إنجليزية وأرقام وشرطة سفلية فقط"); return; }
+  if (regPhone.value.replace(/\D/g,"").length < 7) { setErr(regErr, "أدخل رقم هاتف صحيح"); return; }
+  if (password.length < 8)  { setErr(regErr, "كلمة المرور 8 أحرف على الأقل"); return; }
+  if (password !== password2){ setErr(regErr, "كلمتا المرور غير متطابقتين"); return; }
+  if (username === ADMIN_USERNAME) { setErr(regErr, "اسم المستخدم هذا محجوز"); return; }
+
+  setErr(regErr, "");
+  regBtn.disabled = true;
+  regBtn.textContent = "جار الإنشاء…";
+
+  try {
+    // Check username uniqueness
+    const snap = await get(query(ref(db, "users"), orderByChild("username"), equalTo(username)));
+    if (snap.exists()) { setErr(regErr, "اسم المستخدم مستخدم بالفعل، اختر غيره"); regBtn.disabled = false; regBtn.textContent = "إنشاء الحساب"; return; }
+
+    const cred = await createUserWithEmailAndPassword(auth, username + DOMAIN, password);
+    await set(ref(db, `users/${cred.user.uid}`), {
+      username, phone,
+      balance: 0, totalMined: 0,
+      lastMineDate: "", dailyMineCount: 0,
+      createdAt: Date.now()
     });
-    if (text.length === 6) verifyOtp();
-    else if (otpBoxes[text.length]) otpBoxes[text.length].focus();
-  });
-});
-
-function getOtpCode() {
-  return [...otpBoxes].map(b => b.value).join("");
-}
-
-function clearOtp() {
-  otpBoxes.forEach(b => { b.value = ""; b.classList.remove("filled"); });
-  otpBoxes[0].focus();
-}
-
-// ── Send OTP ───────────────────────────────────────────────────
-sendOtpBtn.addEventListener("click", sendOtp);
-phoneInp.addEventListener("keydown", e => { if (e.key === "Enter") sendOtp(); });
-
-async function sendOtp() {
-  const raw    = phoneInp.value.replace(/\D/g, "").replace(/^0+/, "");
-  const cc     = countryCode.value;
-  const number = cc + raw;
-
-  if (raw.length < 7) { setMsg(phoneMsg, "أدخل رقم هاتف صحيح", "err"); return; }
-
-  setMsg(phoneMsg, "");
-  sendOtpBtn.disabled = true;
-  sendOtpBtn.textContent = "جار الإرسال…";
-
-  try {
-    initRecaptcha();
-    confirmationResult = await signInWithPhoneNumber(auth, number, recaptchaVerifier);
-    otpHint.textContent = `تم إرسال رمز SMS إلى ${number}`;
-    stepPhone.style.display = "none";
-    stepOtp.style.display   = "block";
-    otpBoxes[0].focus();
-    setMsg(otpMsg, "");
   } catch (e) {
-    recaptchaVerifier = null;
-    setMsg(phoneMsg, friendlyError(e.code), "err");
-    sendOtpBtn.disabled = false;
-    sendOtpBtn.textContent = "إرسال رمز التحقق";
+    setErr(regErr, authError(e.code));
+    regBtn.disabled = false;
+    regBtn.textContent = "إنشاء الحساب";
   }
 }
-
-// ── Verify OTP ─────────────────────────────────────────────────
-verifyBtn.addEventListener("click", verifyOtp);
-
-async function verifyOtp() {
-  const code = getOtpCode();
-  if (code.length < 6) { setMsg(otpMsg, "أدخل الرمز المكون من 6 أرقام", "err"); return; }
-  if (!confirmationResult) { setMsg(otpMsg, "أرسل الرمز أولاً", "err"); return; }
-
-  setMsg(otpMsg, "");
-  verifyBtn.disabled = true;
-  verifyBtn.textContent = "جار التحقق…";
-
-  try {
-    await confirmationResult.confirm(code);
-    // onAuthStateChanged will handle the rest
-  } catch (e) {
-    setMsg(otpMsg, friendlyError(e.code), "err");
-    verifyBtn.disabled = false;
-    verifyBtn.textContent = "تحقق ودخول ⚡";
-    clearOtp();
-  }
-}
-
-// ── Back button ────────────────────────────────────────────────
-backBtn.addEventListener("click", () => {
-  stepOtp.style.display   = "none";
-  stepPhone.style.display = "block";
-  sendOtpBtn.disabled     = false;
-  sendOtpBtn.textContent  = "إرسال رمز التحقق";
-  setMsg(phoneMsg, "");
-  confirmationResult = null;
-  recaptchaVerifier  = null;
-});
 
 // ── Auth state ─────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
@@ -197,12 +174,7 @@ onAuthStateChanged(auth, async user => {
     currentUser = user;
     authScreen.style.display = "none";
     mainScreen.style.display = "flex";
-    // Reset steps for next logout
-    stepPhone.style.display = "block";
-    stepOtp.style.display   = "none";
-    sendOtpBtn.disabled     = false;
-    sendOtpBtn.textContent  = "إرسال رمز التحقق";
-    navName.textContent     = user.phoneNumber || user.displayName || "مستخدم";
+    resetAuthForms();
     await ensureUserRecord(user);
     listenUserData(user.uid);
   } else {
@@ -215,24 +187,25 @@ onAuthStateChanged(auth, async user => {
 
 btnLogout.addEventListener("click", () => signOut(auth));
 
-// ── User record ────────────────────────────────────────────────
+function resetAuthForms() {
+  loginUser.value = ""; loginPass.value = "";
+  regUser.value = ""; regPhone.value = ""; regPass.value = ""; regPass2.value = "";
+  loginBtn.disabled = false; loginBtn.textContent = "دخول ⚡";
+  regBtn.disabled   = false; regBtn.textContent   = "إنشاء الحساب";
+  clearErr();
+}
+
+// ── Ensure user record ─────────────────────────────────────────
 async function ensureUserRecord(user) {
-  const userRef = ref(db, `users/${user.uid}`);
-  const snap = await get(userRef);
-  const phone = user.phoneNumber || "";
+  const snap = await get(ref(db, `users/${user.uid}`));
   if (!snap.exists()) {
-    await set(userRef, {
-      phone,
-      name: phone,
-      email: "",
-      photoURL: "",
-      balance: 0,
-      totalMined: 0,
-      lastMineDate: "",
-      dailyMineCount: 0
+    const uname = user.email?.replace(DOMAIN, "") || user.uid.slice(0,8);
+    await set(ref(db, `users/${user.uid}`), {
+      username: uname, phone: "",
+      balance: 0, totalMined: 0,
+      lastMineDate: "", dailyMineCount: 0,
+      createdAt: Date.now()
     });
-  } else {
-    await update(userRef, { phone });
   }
 }
 
@@ -251,11 +224,10 @@ function listenUserData(uid) {
     dailyCount.textContent = count;
     minesLeft.textContent  = Math.max(0, left);
     mineBtn.disabled       = left <= 0;
+    navName.textContent    = userData.username || "";
 
-    if (adminBtnWrap) {
-      const isAdmin = userData.phone === "+966500000000" || userData.email === ADMIN_EMAIL;
-      adminBtnWrap.style.display = isAdmin ? "block" : "none";
-    }
+    if (adminBtnWrap)
+      adminBtnWrap.style.display = (userData.username === ADMIN_USERNAME) ? "block" : "none";
   });
 }
 
@@ -269,40 +241,33 @@ function todayStr() {
 mineBtn.addEventListener("click", async () => {
   if (!currentUser || !userData) return;
   mineBtn.disabled = true;
-
   const todayKey = todayStr();
   const sameDay  = userData.lastMineDate === todayKey;
   const dailyC   = sameDay ? (userData.dailyMineCount || 0) : 0;
-
-  if (dailyC >= 50) {
-    showToast("لقد وصلت للحد اليومي (50 عملية)", "err");
-    return;
-  }
+  if (dailyC >= 50) { showToast("وصلت للحد اليومي (50 عملية)", "err"); return; }
 
   const reward   = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
   const newBal   = parseFloat(((userData.balance || 0) + reward).toFixed(4));
   const newTotal = parseFloat(((userData.totalMined || 0) + reward).toFixed(4));
-
   try {
     await update(ref(db, `users/${currentUser.uid}`), {
       balance: newBal, totalMined: newTotal,
       lastMineDate: todayKey, dailyMineCount: dailyC + 1
     });
-    spawnFloatReward(`+α${reward.toFixed(4)}`);
-    showToast(`تم التعدين! حصلت على α${reward.toFixed(4)}`);
+    spawnReward(`+α${reward.toFixed(4)}`);
+    showToast(`+α${reward.toFixed(4)} تم التعدين!`);
   } catch (e) {
     showToast("خطأ: " + e.message, "err");
     mineBtn.disabled = false;
   }
 });
 
-function spawnFloatReward(text) {
+function spawnReward(text) {
   const el = document.createElement("div");
-  el.className   = "float-reward";
-  el.textContent = text;
-  const rect = mineBtn.getBoundingClientRect();
-  el.style.left  = (rect.left + rect.width / 2 - 60) + "px";
-  el.style.top   = (rect.top - 10) + "px";
+  el.className = "float-reward"; el.textContent = text;
+  const r = mineBtn.getBoundingClientRect();
+  el.style.left = (r.left + r.width / 2 - 55) + "px";
+  el.style.top  = (r.top - 10) + "px";
   document.body.appendChild(el);
   el.addEventListener("animationend", () => el.remove());
 }
@@ -313,39 +278,31 @@ couponInp.addEventListener("keydown", e => { if (e.key === "Enter") redeemCoupon
 
 async function redeemCoupon() {
   const code = couponInp.value.trim().toUpperCase();
-  if (!code) { setCouponMsg("أدخل كود القسيمة أولاً", "err"); return; }
+  if (!code) { setCouponMsg("أدخل كود القسيمة", "err"); return; }
   if (!currentUser) return;
-
   couponBtn.disabled = true;
   setCouponMsg("جار التحقق…", "");
-
   try {
     const cpRef = ref(db, `coupons/${code}`);
     const snap  = await get(cpRef);
-    if (!snap.exists()) { setCouponMsg("القسيمة غير موجودة", "err"); return; }
+    if (!snap.exists())   { setCouponMsg("القسيمة غير موجودة", "err"); return; }
     const cp = snap.val();
-    if (!cp.isActive) { setCouponMsg("هذه القسيمة غير نشطة", "err"); return; }
-    const usedBy = cp.usedBy ? Object.values(cp.usedBy) : [];
-    if (usedBy.includes(currentUser.uid)) { setCouponMsg("لقد استخدمت هذه القسيمة من قبل", "err"); return; }
-
+    if (!cp.isActive)     { setCouponMsg("القسيمة غير نشطة", "err"); return; }
+    const used = cp.usedBy ? Object.values(cp.usedBy) : [];
+    if (used.includes(currentUser.uid)) { setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
     const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
     await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
-    await update(cpRef, { usedBy: [...usedBy, currentUser.uid] });
-
-    setCouponMsg(`تم! حصلت على α${cp.rewardAmount} 🎉`, "ok");
+    await update(cpRef, { usedBy: [...used, currentUser.uid] });
+    setCouponMsg(`تم! +α${cp.rewardAmount} 🎉`, "ok");
     couponInp.value = "";
-    showToast(`تم استبدال القسيمة! +α${cp.rewardAmount}`);
+    showToast(`+α${cp.rewardAmount} تم استبدال القسيمة!`);
   } catch (e) {
     setCouponMsg("خطأ: " + e.message, "err");
   } finally {
     couponBtn.disabled = false;
   }
 }
-
-function setCouponMsg(msg, type) {
-  couponMsg.textContent = msg;
-  couponMsg.className   = "coupon-msg " + type;
-}
+function setCouponMsg(m, t) { couponMsg.textContent = m; couponMsg.className = "coupon-msg " + t; }
 
 // ── Leaderboard ────────────────────────────────────────────────
 async function loadLeaderboard() {
@@ -357,16 +314,15 @@ async function loadLeaderboard() {
     snap.forEach(c => users.push({ uid: c.key, ...c.val() }));
     users.sort((a, b) => (b.balance || 0) - (a.balance || 0));
     lbBody.innerHTML = users.map((u, i) => {
-      const rank  = i + 1;
-      const cls   = rank === 1 ? "r1" : rank === 2 ? "r2" : rank === 3 ? "r3" : "";
-      const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      const r = i + 1;
+      const medal = r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : r;
+      const cls   = r <= 3 ? `r${r}` : "";
       const isYou = currentUser && u.uid === currentUser.uid;
-      const label = u.name || u.phone || "مجهول";
       return `<tr class="${isYou ? "lb-you" : ""}">
         <td><span class="lb-rank ${cls}">${medal}</span></td>
-        <td><div class="lb-name-cell"><span style="font-size:1.4rem">📱</span> ${label} ${isYou ? "<span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</div></td>
-        <td><span class="lb-balance">α${(u.balance || 0).toFixed(4)}</span></td>
-        <td style="color:#888">α${(u.totalMined || 0).toFixed(4)}</td>
+        <td><div class="lb-name-cell">⚡ ${u.username || "مجهول"}${isYou ? " <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</div></td>
+        <td><span class="lb-balance">α${(u.balance||0).toFixed(4)}</span></td>
+        <td style="color:#888">α${(u.totalMined||0).toFixed(4)}</td>
       </tr>`;
     }).join("");
   } catch (e) {
@@ -377,40 +333,42 @@ async function loadLeaderboard() {
 // ── Profile ────────────────────────────────────────────────────
 async function loadProfile() {
   if (!currentUser || !userData) return;
-  profileName.textContent  = userData.name  || currentUser.phoneNumber || "";
-  profileEmail.textContent = currentUser.phoneNumber || "";
+  profileName.textContent  = userData.username || "";
+  profilePhone.textContent = userData.phone || "";
   profileBal.textContent   = (userData.balance || 0).toFixed(4);
   profileTotal.textContent = (userData.totalMined || 0).toFixed(4);
-  const todayKey = todayStr();
-  const count = userData.lastMineDate === todayKey ? (userData.dailyMineCount || 0) : 0;
+  const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount || 0) : 0;
   profileDaily.textContent = `${count}/50`;
   try {
     const snap = await get(ref(db, "users"));
     if (snap.exists()) {
-      const users = [];
-      snap.forEach(c => users.push({ uid: c.key, balance: c.val().balance || 0 }));
-      users.sort((a, b) => b.balance - a.balance);
-      const idx = users.findIndex(u => u.uid === currentUser.uid);
-      profileRank.textContent = idx >= 0 ? `#${idx + 1}` : "-";
+      const arr = []; snap.forEach(c => arr.push({ uid: c.key, bal: c.val().balance || 0 }));
+      arr.sort((a,b) => b.bal - a.bal);
+      const idx = arr.findIndex(u => u.uid === currentUser.uid);
+      profileRank.textContent = idx >= 0 ? `#${idx+1}` : "-";
     }
   } catch {}
 }
 
-// ── Helpers ────────────────────────────────────────────────────
-function setMsg(el, msg, type = "") {
-  el.textContent = msg;
-  el.className   = "auth-msg " + type;
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
-function friendlyError(code) {
-  const map = {
-    "auth/invalid-phone-number":       "رقم الهاتف غير صحيح",
-    "auth/too-many-requests":          "محاولات كثيرة، انتظر قليلاً",
-    "auth/invalid-verification-code":  "رمز التحقق خاطئ",
-    "auth/code-expired":               "انتهت صلاحية الرمز، أعد الإرسال",
-    "auth/missing-phone-number":       "أدخل رقم الهاتف",
-    "auth/quota-exceeded":             "تجاوزت الحد المسموح، حاول لاحقاً",
-    "auth/captcha-check-failed":       "فشل التحقق، أعد المحاولة",
+// ── Helpers ────────────────────────────────────────────────────
+function setErr(el, msg) { el.textContent = msg; }
+function clearErr() { setErr(loginErr,""); setErr(regErr,""); }
+
+function authError(code) {
+  const m = {
+    "auth/user-not-found":          "اسم المستخدم غير موجود",
+    "auth/wrong-password":          "كلمة المرور خاطئة",
+    "auth/invalid-credential":      "اسم المستخدم أو كلمة المرور خاطئة",
+    "auth/email-already-in-use":    "اسم المستخدم مستخدم بالفعل",
+    "auth/weak-password":           "كلمة المرور ضعيفة (8 أحرف على الأقل)",
+    "auth/too-many-requests":       "محاولات كثيرة، انتظر قليلاً",
+    "auth/network-request-failed":  "خطأ في الاتصال، تحقق من الإنترنت",
+    "auth/invalid-email":           "خطأ داخلي، تواصل مع الدعم",
   };
-  return map[code] || "خطأ: " + code;
+  return m[code] || "خطأ غير متوقع، حاول مرة أخرى";
 }
