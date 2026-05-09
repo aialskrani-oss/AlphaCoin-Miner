@@ -6,8 +6,6 @@ import {
   ref, get, set, update, remove, onValue, query, orderByChild, equalTo
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const DOMAIN = "@alphacoin.app";
-
 // ── DOM ────────────────────────────────────────────────────────
 const loadingEl      = document.getElementById("loading");
 const deniedView     = document.getElementById("denied-view");
@@ -95,7 +93,7 @@ admPass?.addEventListener("keydown", e => { if (e.key === "Enter") doAdminLogin(
 async function doAdminLogin() {
   const username = admUser.value.trim().toLowerCase();
   const password = admPass.value;
-  if (!username) { admErr.textContent = "أدخل اسم المستخدم"; return; }
+  if (!username) { admErr.textContent = "أدخل البريد الإلكتروني"; return; }
   if (!password) { admErr.textContent = "أدخل كلمة المرور"; return; }
 
   admErr.textContent = "";
@@ -103,7 +101,7 @@ async function doAdminLogin() {
   admLoginBtn.textContent = "جار الدخول…";
 
   try {
-    await signInWithEmailAndPassword(auth, username + DOMAIN, password);
+    await signInWithEmailAndPassword(auth, username, password);
   } catch (e) {
     const errs = {
       "auth/user-not-found":     "اسم المستخدم غير موجود",
