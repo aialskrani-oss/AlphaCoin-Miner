@@ -1,7 +1,9 @@
 import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   import {
     GoogleAuthProvider,
+    signInWithRedirect,
     signInWithPopup,
+    getRedirectResult,
     signOut,
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
@@ -66,26 +68,52 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   // ── State ──────────────────────────────────────────────────────
   let currentUser = null;
   let userData    = null;
-
-  // ── Google Login ───────────────────────────────────────────────
   const googleProvider = new GoogleAuthProvider();
 
+  // ── Detect mobile ──────────────────────────────────────────────
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  }
+
+  // ── Google Login ───────────────────────────────────────────────
   googleLoginBtn.addEventListener("click", async () => {
     googleLoginBtn.disabled = true;
     googleLoginBtn.textContent = "جار الدخول…";
     authErr.textContent = "";
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (isMobile()) {
+        // Mobile: use redirect (popup is blocked on mobile browsers)
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        // Desktop: use popup
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (e) {
       const msgs = {
         "auth/popup-closed-by-user":    "أُغلقت النافذة قبل اكتمال الدخول",
-        "auth/popup-blocked":           "النافذة المنبثقة محجوبة — يرجى السماح بها في المتصفح",
+        "auth/popup-blocked":           "جارٍ التحويل لصفحة الدخول…",
         "auth/cancelled-popup-request": "تم إلغاء الطلب",
         "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
       };
+      // If popup was blocked, fall back to redirect
+      if (e.code === "auth/popup-blocked") {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       authErr.textContent = msgs[e.code] || ("خطأ: " + e.message);
       googleLoginBtn.disabled = false;
       googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
+    }
+  });
+
+  // ── Handle redirect result (after Google redirect on mobile) ───
+  getRedirectResult(auth).then(async result => {
+    if (result?.user) {
+      // User signed in via redirect — onAuthStateChanged will handle the rest
+    }
+  }).catch(e => {
+    if (e.code !== "auth/no-redirect-operation") {
+      console.error("Redirect error:", e.message);
     }
   });
 
@@ -94,14 +122,14 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     loadingEl.style.display = "none";
     if (user) {
       currentUser = user;
-      authScreen.style.display   = "none";
+      authScreen.style.display    = "none";
       gameContainer.style.display = "flex";
       await ensureUserRecord(user);
       listenUserData(user.uid);
     } else {
       currentUser = null;
       userData    = null;
-      authScreen.style.display   = "flex";
+      authScreen.style.display    = "flex";
       gameContainer.style.display = "none";
       googleLoginBtn.disabled = false;
       googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
