@@ -1,401 +1,387 @@
 <!DOCTYPE html>
-  <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-    <title>AlphaCoin — لوحة التحكم</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@400;700&display=swap" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="style.css"/>
-    <style>
-      /* ── Admin-only styles ── */
-      body{padding:0;background:var(--bg)}
-      .admin-layout{display:flex;min-height:100vh}
-      .admin-sidebar{
-        width:220px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--border);
-        display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
-      }
-      .sidebar-logo{padding:1.2rem 1rem;border-bottom:1px solid var(--border);font-family:'Orbitron',monospace;font-weight:700;color:var(--gold);font-size:.9rem}
-      .sidebar-menu{padding:.5rem 0;flex:1}
-      .sidebar-item{
-        display:flex;align-items:center;gap:.6rem;padding:.65rem 1rem;
-        color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:right;
-      }
-      .sidebar-item:hover{background:var(--bg3);color:var(--text)}
-      .sidebar-item.active{background:rgba(240,180,41,.1);color:var(--gold);border-right:3px solid var(--gold)}
-      .sidebar-item .si-icon{font-size:1rem;width:1.2rem;text-align:center}
-      .admin-main{flex:1;padding:1.2rem;overflow-y:auto;max-width:900px}
-      .admin-section{display:none}
-      .admin-section.active{display:block}
-      .section-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.2rem;margin-bottom:1rem}
-      .section-title{font-size:.88rem;font-weight:700;color:var(--text2);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);letter-spacing:.5px}
-      .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.7rem;margin-bottom:1rem}
-      .stat-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:.9rem;text-align:center}
-      .stat-card .val{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;color:var(--gold)}
-      .stat-card .lbl{font-size:.72rem;color:var(--text2);margin-top:.2rem}
-      /* Fields */
-      .field-group{display:flex;flex-direction:column;gap:.3rem}
-      .field-lbl{font-size:.78rem;color:var(--text2);font-weight:600}
-      .inp{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:.55rem .8rem;font-size:.85rem;outline:none;font-family:'Cairo',sans-serif;transition:border-color .2s;width:100%}
-      .inp:focus{border-color:var(--gold)}
-      select.inp{cursor:pointer}
-      .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-      @media(max-width:500px){.form-grid{grid-template-columns:1fr}}
-      /* Buttons */
-      .btn-action{padding:.45rem .9rem;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .15s;white-space:nowrap}
-      .btn-gold{background:var(--gold);color:#1a1000}
-      .btn-gold:hover{filter:brightness(1.1)}
-      .btn-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-      .btn-green:hover{background:rgba(34,197,94,.25)}
-      .btn-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
-      .btn-red:hover{background:rgba(239,68,68,.25)}
-      .btn-blue{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
-      .btn-blue:hover{background:rgba(59,130,246,.25)}
-      .btn-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
-      /* Toggle switch */
-      .toggle-wrap{display:flex;align-items:center;gap:.7rem}
-      .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
-      .toggle input{opacity:0;width:0;height:0}
-      .slider{position:absolute;inset:0;background:var(--bg4);border-radius:99px;cursor:pointer;transition:.3s}
-      .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-      input:checked+.slider{background:var(--green)}
-      input:checked+.slider:before{transform:translateX(20px)}
-      /* Users table */
-      .users-toolbar{display:flex;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap;align-items:center}
-      .search-inp{flex:1;min-width:150px}
-      .table-wrap{overflow-x:auto}
-      table{width:100%;border-collapse:collapse;font-size:.78rem}
-      th{background:var(--bg3);padding:.6rem .7rem;text-align:right;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
-      th:hover{color:var(--text)}
-      td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}
-      tr:hover td{background:var(--bg3)}
-      .banned-badge{font-size:.68rem;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:20px;padding:.15rem .5rem;margin-right:.3rem}
-      /* Modal */
-      .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
-      .modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:1.5rem;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
-      .modal-title{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:1rem}
-      .modal-fields{display:flex;flex-direction:column;gap:.7rem}
-      .modal-footer{display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end}
-      /* Coupon/card rows */
-      .item-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.6rem;background:var(--bg3);border-radius:var(--r);margin-bottom:.4rem;font-size:.8rem}
-      .item-row .item-name{flex:1;font-weight:700}
-      .item-row .item-meta{color:var(--text2);font-size:.72rem}
-      /* Chart */
-      .chart-wrap{height:200px;position:relative}
-      /* Section message */
-      .section-msg{font-size:.78rem;min-height:1.1em;margin-top:.5rem;padding:.3rem .5rem;border-radius:6px}
-      .section-msg.ok{background:rgba(34,197,94,.1);color:var(--green)}
-      .section-msg.err{background:rgba(239,68,68,.1);color:var(--red)}
-      .section-msg.info{background:rgba(59,130,246,.1);color:var(--blue)}
-      /* Mobile sidebar */
-      .admin-menu-btn{display:none;padding:.5rem .8rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:.85rem}
-      @media(max-width:640px){
-        .admin-layout{flex-direction:column}
-        .admin-sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;overflow-x:auto}
-        .sidebar-logo{padding:.6rem 1rem;width:100%;border-bottom:1px solid var(--border)}
-        .sidebar-menu{display:flex;flex-wrap:nowrap;overflow-x:auto;padding:.3rem;scrollbar-width:none}
-        .sidebar-item{padding:.4rem .7rem;white-space:nowrap;font-size:.76rem}
-        .sidebar-item.active{border-right:none;border-bottom:2px solid var(--gold)}
-      }
-      /* Pagination */
-      .pagination{display:flex;gap:.4rem;justify-content:center;margin-top:.8rem;flex-wrap:wrap}
-      .page-btn{padding:.3rem .7rem;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:.78rem;cursor:pointer;transition:all .15s}
-      .page-btn.active,.page-btn:hover{background:var(--gold);color:#1a1000;border-color:var(--gold)}
-      /* Card form */
-      .card-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-      @media(max-width:500px){.card-form-grid{grid-template-columns:1fr}}
-    </style>
-  </head>
-  <body>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>AlphaCoin — لوحة التحكم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@400;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body{padding:0;background:var(--bg)}
+    .admin-layout{display:flex;min-height:100vh}
+    .admin-sidebar{
+      width:220px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--border);
+      display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+    }
+    .sidebar-logo{padding:1.2rem 1rem;border-bottom:1px solid var(--border);font-family:'Orbitron',monospace;font-weight:700;color:var(--gold);font-size:.9rem}
+    .sidebar-menu{padding:.5rem 0;flex:1}
+    .sidebar-item{
+      display:flex;align-items:center;gap:.6rem;padding:.65rem 1rem;
+      color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:right;
+    }
+    .sidebar-item:hover{background:var(--bg3);color:var(--text)}
+    .sidebar-item.active{background:rgba(240,180,41,.1);color:var(--gold);border-right:3px solid var(--gold)}
+    .sidebar-item .si-icon{font-size:1rem;width:1.2rem;text-align:center}
+    .admin-main{flex:1;padding:1.2rem;overflow-y:auto;max-width:900px}
+    .admin-section{display:none}
+    .admin-section.active{display:block}
+    .section-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.2rem;margin-bottom:1rem}
+    .section-title{font-size:.88rem;font-weight:700;color:var(--text2);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);letter-spacing:.5px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.7rem;margin-bottom:1rem}
+    .stat-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:.9rem;text-align:center}
+    .stat-card .val{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;color:var(--gold)}
+    .stat-card .lbl{font-size:.72rem;color:var(--text2);margin-top:.2rem}
+    .field-group{display:flex;flex-direction:column;gap:.3rem}
+    .field-lbl{font-size:.78rem;color:var(--text2);font-weight:600}
+    .inp{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:.55rem .8rem;font-size:.85rem;outline:none;font-family:'Cairo',sans-serif;transition:border-color .2s;width:100%}
+    .inp:focus{border-color:var(--gold)}
+    select.inp{cursor:pointer}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+    @media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+    .btn-action{padding:.45rem .9rem;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .15s;white-space:nowrap}
+    .btn-gold{background:var(--gold);color:#1a1000}
+    .btn-gold:hover{filter:brightness(1.1)}
+    .btn-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+    .btn-green:hover{background:rgba(34,197,94,.25)}
+    .btn-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+    .btn-red:hover{background:rgba(239,68,68,.25)}
+    .btn-blue{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+    .btn-blue:hover{background:rgba(59,130,246,.25)}
+    .btn-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+    .toggle-wrap{display:flex;align-items:center;gap:.7rem}
+    .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .slider{position:absolute;inset:0;background:var(--bg4);border-radius:99px;cursor:pointer;transition:.3s}
+    .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+    input:checked+.slider{background:var(--green)}
+    input:checked+.slider:before{transform:translateX(20px)}
+    .users-toolbar{display:flex;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap;align-items:center}
+    .search-inp{flex:1;min-width:150px}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.78rem}
+    th{background:var(--bg3);padding:.6rem .7rem;text-align:right;color:var(--text2);font-weight:700;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+    th:hover{color:var(--text)}
+    td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:hover td{background:var(--bg3)}
+    .banned-badge{font-size:.68rem;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:20px;padding:.15rem .5rem;margin-right:.3rem}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:1.5rem;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+    .modal-title{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:1rem}
+    .modal-fields{display:flex;flex-direction:column;gap:.7rem}
+    .modal-footer{display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end}
+    .item-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.6rem;background:var(--bg3);border-radius:var(--r);margin-bottom:.4rem;font-size:.8rem}
+    .item-row .item-name{flex:1;font-weight:700}
+    .item-row .item-meta{color:var(--text2);font-size:.72rem}
+    .chart-wrap{height:200px;position:relative}
+    .section-msg{font-size:.78rem;min-height:1.1em;margin-top:.5rem;padding:.3rem .5rem;border-radius:6px}
+    .section-msg.ok{background:rgba(34,197,94,.1);color:var(--green)}
+    .section-msg.err{background:rgba(239,68,68,.1);color:var(--red)}
+    .section-msg.info{background:rgba(59,130,246,.1);color:var(--blue)}
+    @media(max-width:640px){
+      .admin-layout{flex-direction:column}
+      .admin-sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;overflow-x:auto}
+      .sidebar-logo{padding:.6rem 1rem;width:100%;border-bottom:1px solid var(--border)}
+      .sidebar-menu{display:flex;flex-wrap:nowrap;overflow-x:auto;padding:.3rem;scrollbar-width:none}
+      .sidebar-item{padding:.4rem .7rem;white-space:nowrap;font-size:.76rem}
+      .sidebar-item.active{border-right:none;border-bottom:2px solid var(--gold)}
+    }
+    .pagination{display:flex;gap:.4rem;justify-content:center;margin-top:.8rem;flex-wrap:wrap}
+    .page-btn{padding:.3rem .7rem;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:.78rem;cursor:pointer;transition:all .15s}
+    .page-btn.active,.page-btn:hover{background:var(--gold);color:#1a1000;border-color:var(--gold)}
+    .card-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+    @media(max-width:500px){.card-form-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
 
-  <!-- Edit user modal -->
-  <div class="modal-overlay" id="edit-modal" style="display:none">
-    <div class="modal-box">
-      <div class="modal-title">✏️ تعديل المستخدم</div>
-      <div class="modal-fields">
-        <div class="field-group"><label class="field-lbl">الاسم</label><input class="inp" id="edit-username"/></div>
-        <div class="field-group"><label class="field-lbl">الرصيد</label><input class="inp" id="edit-balance" type="number" step="0.000001"/></div>
-        <div class="field-group"><label class="field-lbl">قوة التعدين</label><input class="inp" id="edit-power" type="number" min="1"/></div>
-        <div class="field-group"><label class="field-lbl">مدة التعدين (ساعة)</label><input class="inp" id="edit-duration" type="number" min="1"/></div>
-        <div class="field-group"><label class="field-lbl">سبب الحظر (اتركه فارغاً للرفع)</label><input class="inp" id="edit-ban-reason" placeholder="اتركه فارغاً = مستخدم نشط"/></div>
-      </div>
-      <div id="edit-msg" class="section-msg"></div>
-      <div class="modal-footer">
-        <button class="btn-action btn-gold" onclick="saveUserEdit()">💾 حفظ</button>
-        <button class="btn-action" onclick="closeModal('edit-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
-      </div>
+<!-- Edit user modal -->
+<div class="modal-overlay" id="edit-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">✏️ تعديل المستخدم</div>
+    <div class="modal-fields">
+      <div class="field-group"><label class="field-lbl">الاسم</label><input class="inp" id="edit-username"/></div>
+      <div class="field-group"><label class="field-lbl">الرصيد</label><input class="inp" id="edit-balance" type="number" step="0.000001"/></div>
+      <div class="field-group"><label class="field-lbl">قوة التعدين</label><input class="inp" id="edit-power" type="number" min="1"/></div>
+      <div class="field-group"><label class="field-lbl">مدة التعدين (ساعة)</label><input class="inp" id="edit-duration" type="number" min="1"/></div>
+      <div class="field-group"><label class="field-lbl">سبب الحظر (اتركه فارغاً للرفع)</label><input class="inp" id="edit-ban-reason" placeholder="اتركه فارغاً = مستخدم نشط"/></div>
+    </div>
+    <div id="edit-msg" class="section-msg"></div>
+    <div class="modal-footer">
+      <button class="btn-action btn-gold" onclick="saveUserEdit()">💾 حفظ</button>
+      <button class="btn-action" onclick="closeModal('edit-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
     </div>
   </div>
+</div>
 
-  <!-- Reward modal -->
-  <div class="modal-overlay" id="reward-modal" style="display:none">
-    <div class="modal-box">
-      <div class="modal-title">🎁 مكافأة مستخدم</div>
-      <div class="modal-fields">
-        <div class="field-group"><label class="field-lbl">المبلغ (α)</label><input class="inp" id="reward-amount" type="number" step="0.001" placeholder="10"/></div>
-        <div class="field-group"><label class="field-lbl">السبب (للسجل)</label><input class="inp" id="reward-reason" placeholder="مكافأة يدوية"/></div>
-      </div>
-      <div id="reward-msg" class="section-msg"></div>
-      <div class="modal-footer">
-        <button class="btn-action btn-gold" onclick="saveReward()">✅ منح المكافأة</button>
-        <button class="btn-action" onclick="closeModal('reward-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
-      </div>
+<!-- Reward modal -->
+<div class="modal-overlay" id="reward-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">🎁 مكافأة مستخدم</div>
+    <div class="modal-fields">
+      <div class="field-group"><label class="field-lbl">المبلغ (α)</label><input class="inp" id="reward-amount" type="number" step="0.001" placeholder="10"/></div>
+      <div class="field-group"><label class="field-lbl">السبب (للسجل)</label><input class="inp" id="reward-reason" placeholder="مكافأة يدوية"/></div>
+    </div>
+    <div id="reward-msg" class="section-msg"></div>
+    <div class="modal-footer">
+      <button class="btn-action btn-gold" onclick="saveReward()">✅ منح المكافأة</button>
+      <button class="btn-action" onclick="closeModal('reward-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
     </div>
   </div>
+</div>
 
-  <!-- Bulk reward modal -->
-  <div class="modal-overlay" id="bulk-modal" style="display:none">
-    <div class="modal-box">
-      <div class="modal-title">💰 مكافأة جماعية</div>
-      <div class="modal-fields">
-        <div class="field-group"><label class="field-lbl">المبلغ لكل مستخدم (α)</label><input class="inp" id="bulk-amount" type="number" step="0.001" placeholder="5"/></div>
-        <div class="field-group"><label class="field-lbl">نطاق المستخدمين</label>
-          <select class="inp" id="bulk-scope">
-            <option value="all">جميع المستخدمين</option>
-            <option value="active">النشطون فقط (سجلوا خلال 7 أيام)</option>
+<!-- Bulk reward modal -->
+<div class="modal-overlay" id="bulk-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">💰 مكافأة جماعية</div>
+    <div class="modal-fields">
+      <div class="field-group"><label class="field-lbl">المبلغ لكل مستخدم (α)</label><input class="inp" id="bulk-amount" type="number" step="0.001" placeholder="5"/></div>
+      <div class="field-group"><label class="field-lbl">نطاق المستخدمين</label>
+        <select class="inp" id="bulk-scope">
+          <option value="all">جميع المستخدمين</option>
+          <option value="active">النشطون فقط (سجلوا خلال 7 أيام)</option>
+        </select>
+      </div>
+    </div>
+    <div id="bulk-msg" class="section-msg"></div>
+    <div class="modal-footer">
+      <button class="btn-action btn-gold" onclick="executeBulkReward()">⚡ تنفيذ</button>
+      <button class="btn-action" onclick="closeModal('bulk-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <nav class="admin-sidebar">
+    <div class="sidebar-logo">⛏ AlphaCoin Admin</div>
+    <div class="sidebar-menu">
+      <button class="sidebar-item active" onclick="showSection('dashboard')" data-sec="dashboard"><span class="si-icon">📊</span> لوحة المعلومات</button>
+      <button class="sidebar-item" onclick="showSection('users')" data-sec="users"><span class="si-icon">👥</span> المستخدمون</button>
+      <button class="sidebar-item" onclick="showSection('settings')" data-sec="settings"><span class="si-icon">⚙️</span> الإعدادات العامة</button>
+      <button class="sidebar-item" onclick="showSection('daily-bonus')" data-sec="daily-bonus"><span class="si-icon">📅</span> المكافأة اليومية</button>
+      <button class="sidebar-item" onclick="showSection('referral')" data-sec="referral"><span class="si-icon">👥</span> نظام الإحالة</button>
+      <button class="sidebar-item" onclick="showSection('coupons')" data-sec="coupons"><span class="si-icon">🎟</span> الكوبونات</button>
+      <button class="sidebar-item" onclick="showSection('cards')" data-sec="cards"><span class="si-icon">🃏</span> بطاقات العروض</button>
+      <button class="sidebar-item" onclick="showSection('leaderboard-admin')" data-sec="leaderboard-admin"><span class="si-icon">🏆</span> الترتيب</button>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <div id="sec-dashboard" class="admin-section active">
+      <div class="stats-grid" id="dash-stats">
+        <div class="stat-card"><div class="val" id="stat-total-users">—</div><div class="lbl">إجمالي المستخدمين</div></div>
+        <div class="stat-card"><div class="val" id="stat-total-balance">—</div><div class="lbl">إجمالي الرصيد (α)</div></div>
+        <div class="stat-card"><div class="val" id="stat-active-today">—</div><div class="lbl">نشطون اليوم</div></div>
+        <div class="stat-card"><div class="val" id="stat-banned">—</div><div class="lbl">محظورون</div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">📈 نمو المستخدمين (آخر 7 أيام)</div>
+        <div class="chart-wrap"><canvas id="chart-users"></canvas></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">💰 أعلى 5 أرصدة</div>
+        <div id="top-users-list"></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="sec-users" class="admin-section">
+      <div class="section-card">
+        <div class="users-toolbar">
+          <input class="inp search-inp" id="user-search" placeholder="بحث بالاسم أو البريد…" oninput="filterUsers()"/>
+          <select class="inp" id="user-filter" style="width:140px" onchange="filterUsers()">
+            <option value="all">الكل</option>
+            <option value="banned">محظورون</option>
+            <option value="active">نشطون</option>
           </select>
+          <button class="btn-action btn-gold" onclick="exportCSV()">📤 تصدير CSV</button>
+          <button class="btn-action btn-blue" onclick="document.getElementById('bulk-modal').style.display='flex'">💰 مكافأة جماعية</button>
         </div>
-      </div>
-      <div id="bulk-msg" class="section-msg"></div>
-      <div class="modal-footer">
-        <button class="btn-action btn-gold" onclick="executeBulkReward()">⚡ تنفيذ</button>
-        <button class="btn-action" onclick="closeModal('bulk-modal')" style="background:var(--bg3);color:var(--text2)">إلغاء</button>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th onclick="sortUsers('username')">الاسم ⇅</th>
+              <th onclick="sortUsers('balance')">الرصيد ⇅</th>
+              <th onclick="sortUsers('streak')">Streak ⇅</th>
+              <th onclick="sortUsers('joinedAt')">التسجيل ⇅</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="users-pagination"></div>
+        <div style="font-size:.72rem;color:var(--text3);margin-top:.5rem" id="users-count-label"></div>
       </div>
     </div>
-  </div>
 
-  <div class="admin-layout">
-    <!-- Sidebar -->
-    <nav class="admin-sidebar">
-      <div class="sidebar-logo">⛏ AlphaCoin Admin</div>
-      <div class="sidebar-menu">
-        <button class="sidebar-item active" onclick="showSection('dashboard')" data-sec="dashboard"><span class="si-icon">📊</span> لوحة المعلومات</button>
-        <button class="sidebar-item" onclick="showSection('users')" data-sec="users"><span class="si-icon">👥</span> المستخدمون</button>
-        <button class="sidebar-item" onclick="showSection('settings')" data-sec="settings"><span class="si-icon">⚙️</span> الإعدادات العامة</button>
-        <button class="sidebar-item" onclick="showSection('daily-bonus')" data-sec="daily-bonus"><span class="si-icon">📅</span> المكافأة اليومية</button>
-        <button class="sidebar-item" onclick="showSection('referral')" data-sec="referral"><span class="si-icon">👥</span> نظام الإحالة</button>
-        <button class="sidebar-item" onclick="showSection('coupons')" data-sec="coupons"><span class="si-icon">🎟</span> الكوبونات</button>
-        <button class="sidebar-item" onclick="showSection('cards')" data-sec="cards"><span class="si-icon">🃏</span> بطاقات العروض</button>
-        <button class="sidebar-item" onclick="showSection('leaderboard-admin')" data-sec="leaderboard-admin"><span class="si-icon">🏆</span> الترتيب</button>
+    <!-- SETTINGS -->
+    <div id="sec-settings" class="admin-section">
+      <div class="section-card">
+        <div class="section-title">🔧 وضع الصيانة</div>
+        <div class="toggle-wrap" style="margin-bottom:.8rem">
+          <label class="toggle"><input type="checkbox" id="maintenance-toggle" onchange="saveMaintenanceSetting()"/><span class="slider"></span></label>
+          <span style="font-size:.85rem">تفعيل وضع الصيانة</span>
+        </div>
+        <div class="field-group">
+          <label class="field-lbl">رسالة الصيانة</label>
+          <input class="inp" id="maintenance-msg-inp" placeholder="الموقع تحت الصيانة، يرجى المحاولة لاحقاً" oninput="saveMaintenanceSetting()"/>
+        </div>
+        <div id="maintenance-save-msg" class="section-msg"></div>
       </div>
-    </nav>
-
-    <!-- Main content -->
-    <main class="admin-main">
-
-      <!-- ════ DASHBOARD ════ -->
-      <div id="sec-dashboard" class="admin-section active">
-        <div class="stats-grid" id="dash-stats">
-          <div class="stat-card"><div class="val" id="stat-total-users">—</div><div class="lbl">إجمالي المستخدمين</div></div>
-          <div class="stat-card"><div class="val" id="stat-total-balance">—</div><div class="lbl">إجمالي الرصيد (α)</div></div>
-          <div class="stat-card"><div class="val" id="stat-active-today">—</div><div class="lbl">نشطون اليوم</div></div>
-          <div class="stat-card"><div class="val" id="stat-banned">—</div><div class="lbl">محظورون</div></div>
+      <div class="section-card">
+        <div class="section-title">📢 الإعلان العام (banner)</div>
+        <div class="toggle-wrap" style="margin-bottom:.8rem">
+          <label class="toggle"><input type="checkbox" id="ann-toggle" onchange="saveAnnouncementSetting()"/><span class="slider"></span></label>
+          <span style="font-size:.85rem">إظهار الإعلان للمستخدمين</span>
         </div>
-        <div class="section-card">
-          <div class="section-title">📈 نمو المستخدمين (آخر 7 أيام)</div>
-          <div class="chart-wrap"><canvas id="chart-users"></canvas></div>
-        </div>
-        <div class="section-card">
-          <div class="section-title">💰 أعلى 5 أرصدة</div>
-          <div id="top-users-list"></div>
-        </div>
-      </div>
-
-      <!-- ════ USERS ════ -->
-      <div id="sec-users" class="admin-section">
-        <div class="section-card">
-          <div class="users-toolbar">
-            <input class="inp search-inp" id="user-search" placeholder="بحث بالاسم أو البريد…" oninput="filterUsers()"/>
-            <select class="inp" id="user-filter" style="width:140px" onchange="filterUsers()">
-              <option value="all">الكل</option>
-              <option value="banned">محظورون</option>
-              <option value="active">نشطون</option>
-            </select>
-            <button class="btn-action btn-gold" onclick="exportCSV()">📤 تصدير CSV</button>
-            <button class="btn-action btn-blue" onclick="document.getElementById('bulk-modal').style.display='flex'">💰 مكافأة جماعية</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th onclick="sortUsers('username')">الاسم ⇅</th>
-                <th onclick="sortUsers('balance')">الرصيد ⇅</th>
-                <th onclick="sortUsers('streak')">Streak ⇅</th>
-                <th onclick="sortUsers('joinedAt')">التسجيل ⇅</th>
-                <th>الحالة</th>
-                <th>إجراءات</th>
-              </tr></thead>
-              <tbody id="users-tbody"></tbody>
-            </table>
-          </div>
-          <div class="pagination" id="users-pagination"></div>
-          <div style="font-size:.72rem;color:var(--text3);margin-top:.5rem" id="users-count-label"></div>
-        </div>
-      </div>
-
-      <!-- ════ SETTINGS ════ -->
-      <div id="sec-settings" class="admin-section">
-        <!-- Maintenance -->
-        <div class="section-card">
-          <div class="section-title">🔧 وضع الصيانة</div>
-          <div class="toggle-wrap" style="margin-bottom:.8rem">
-            <label class="toggle"><input type="checkbox" id="maintenance-toggle" onchange="saveMaintenanceSetting()"/><span class="slider"></span></label>
-            <span style="font-size:.85rem">تفعيل وضع الصيانة</span>
+        <div class="form-grid">
+          <div class="field-group" style="grid-column:1/-1">
+            <label class="field-lbl">نص الإعلان</label>
+            <input class="inp" id="ann-text" placeholder="مثال: تحديث جديد! مكافأة مضاعفة اليوم 🎉" oninput="saveAnnouncementSetting()"/>
           </div>
           <div class="field-group">
-            <label class="field-lbl">رسالة الصيانة</label>
-            <input class="inp" id="maintenance-msg-inp" placeholder="الموقع تحت الصيانة، يرجى المحاولة لاحقاً" oninput="saveMaintenanceSetting()"/>
+            <label class="field-lbl">نوع الإعلان (لون)</label>
+            <select class="inp" id="ann-type" onchange="saveAnnouncementSetting()">
+              <option value="info">🔵 معلومات</option>
+              <option value="warning">🟡 تحذير</option>
+              <option value="success">🟢 نجاح</option>
+              <option value="danger">🔴 خطر</option>
+            </select>
           </div>
-          <div id="maintenance-save-msg" class="section-msg"></div>
         </div>
-        <!-- Announcement -->
-        <div class="section-card">
-          <div class="section-title">📢 الإعلان العام (banner)</div>
-          <div class="toggle-wrap" style="margin-bottom:.8rem">
-            <label class="toggle"><input type="checkbox" id="ann-toggle" onchange="saveAnnouncementSetting()"/><span class="slider"></span></label>
-            <span style="font-size:.85rem">إظهار الإعلان للمستخدمين</span>
-          </div>
-          <div class="form-grid">
-            <div class="field-group" style="grid-column:1/-1">
-              <label class="field-lbl">نص الإعلان</label>
-              <input class="inp" id="ann-text" placeholder="مثال: تحديث جديد! مكافأة مضاعفة اليوم 🎉" oninput="saveAnnouncementSetting()"/>
-            </div>
-            <div class="field-group">
-              <label class="field-lbl">نوع الإعلان (لون)</label>
-              <select class="inp" id="ann-type" onchange="saveAnnouncementSetting()">
-                <option value="info">🔵 معلومات</option>
-                <option value="warning">🟡 تحذير</option>
-                <option value="success">🟢 نجاح</option>
-                <option value="danger">🔴 خطر</option>
-              </select>
-            </div>
-          </div>
-          <div id="ann-save-msg" class="section-msg"></div>
-        </div>
+        <div id="ann-save-msg" class="section-msg"></div>
       </div>
+    </div>
 
-      <!-- ════ DAILY BONUS ════ -->
-      <div id="sec-daily-bonus" class="admin-section">
-        <div class="section-card">
-          <div class="section-title">📅 إعدادات المكافأة اليومية</div>
-          <div class="toggle-wrap" style="margin-bottom:.8rem">
-            <label class="toggle"><input type="checkbox" id="daily-toggle" onchange="saveDailySettings()"/><span class="slider"></span></label>
-            <span style="font-size:.85rem">تفعيل المكافأة اليومية</span>
-          </div>
-          <div class="form-grid">
-            <div class="field-group">
-              <label class="field-lbl">المكافأة الأساسية (α)</label>
-              <input class="inp" id="daily-base" type="number" step="0.001" placeholder="5" oninput="saveDailySettings()"/>
-            </div>
-            <div class="field-group">
-              <label class="field-lbl">مضاعف Streak (مثال: 1.2 = +20%)</label>
-              <input class="inp" id="daily-multiplier" type="number" step="0.01" placeholder="1.2" oninput="saveDailySettings()"/>
-            </div>
-            <div class="field-group">
-              <label class="field-lbl">أقصى عدد أيام Streak</label>
-              <input class="inp" id="daily-maxstreak" type="number" step="1" placeholder="30" oninput="saveDailySettings()"/>
-            </div>
-            <div class="field-group">
-              <label class="field-lbl">معاينة (يوم 1/5/10)</label>
-              <div id="daily-preview" style="font-size:.8rem;color:var(--gold);padding:.55rem 0">—</div>
-            </div>
-          </div>
-          <div id="daily-save-msg" class="section-msg"></div>
+    <!-- DAILY BONUS -->
+    <div id="sec-daily-bonus" class="admin-section">
+      <div class="section-card">
+        <div class="section-title">📅 إعدادات المكافأة اليومية</div>
+        <div class="toggle-wrap" style="margin-bottom:.8rem">
+          <label class="toggle"><input type="checkbox" id="daily-toggle" onchange="saveDailySettings()"/><span class="slider"></span></label>
+          <span style="font-size:.85rem">تفعيل المكافأة اليومية</span>
         </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-lbl">المكافأة الأساسية (α)</label>
+            <input class="inp" id="daily-base" type="number" step="0.001" placeholder="5" oninput="saveDailySettings()"/>
+          </div>
+          <div class="field-group">
+            <label class="field-lbl">مضاعف Streak (مثال: 1.2 = +20%)</label>
+            <input class="inp" id="daily-multiplier" type="number" step="0.01" placeholder="1.2" oninput="saveDailySettings()"/>
+          </div>
+          <div class="field-group">
+            <label class="field-lbl">أقصى عدد أيام Streak</label>
+            <input class="inp" id="daily-maxstreak" type="number" step="1" placeholder="30" oninput="saveDailySettings()"/>
+          </div>
+          <div class="field-group">
+            <label class="field-lbl">معاينة (يوم 1/5/10)</label>
+            <div id="daily-preview" style="font-size:.8rem;color:var(--gold);padding:.55rem 0">—</div>
+          </div>
+        </div>
+        <div id="daily-save-msg" class="section-msg"></div>
       </div>
+    </div>
 
-      <!-- ════ REFERRAL ════ -->
-      <div id="sec-referral" class="admin-section">
-        <div class="section-card">
-          <div class="section-title">👥 إعدادات نظام الإحالة</div>
-          <div class="toggle-wrap" style="margin-bottom:.8rem">
-            <label class="toggle"><input type="checkbox" id="ref-toggle" onchange="saveReferralSettings()"/><span class="slider"></span></label>
-            <span style="font-size:.85rem">تفعيل نظام الإحالة</span>
-          </div>
-          <div class="form-grid">
-            <div class="field-group">
-              <label class="field-lbl">مكافأة المُحيل (صاحب الكود) α</label>
-              <input class="inp" id="ref-referrer" type="number" step="0.001" placeholder="20" oninput="saveReferralSettings()"/>
-            </div>
-            <div class="field-group">
-              <label class="field-lbl">مكافأة المستخدم الجديد α</label>
-              <input class="inp" id="ref-referee" type="number" step="0.001" placeholder="10" oninput="saveReferralSettings()"/>
-            </div>
-          </div>
-          <div id="ref-save-msg" class="section-msg"></div>
+    <!-- REFERRAL -->
+    <div id="sec-referral" class="admin-section">
+      <div class="section-card">
+        <div class="section-title">👥 إعدادات نظام الإحالة</div>
+        <div class="toggle-wrap" style="margin-bottom:.8rem">
+          <label class="toggle"><input type="checkbox" id="ref-toggle" onchange="saveReferralSettings()"/><span class="slider"></span></label>
+          <span style="font-size:.85rem">تفعيل نظام الإحالة</span>
         </div>
-        <div class="section-card">
-          <div class="section-title">📊 إحصائيات الإحالة</div>
-          <div id="referral-stats">
-            <div style="color:var(--text3);font-size:.85rem">جار التحميل…</div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label class="field-lbl">مكافأة المُحيل (صاحب الكود) α</label>
+            <input class="inp" id="ref-referrer" type="number" step="0.001" placeholder="20" oninput="saveReferralSettings()"/>
+          </div>
+          <div class="field-group">
+            <label class="field-lbl">مكافأة المستخدم الجديد α</label>
+            <input class="inp" id="ref-referee" type="number" step="0.001" placeholder="10" oninput="saveReferralSettings()"/>
           </div>
         </div>
+        <div id="ref-save-msg" class="section-msg"></div>
       </div>
-
-      <!-- ════ COUPONS ════ -->
-      <div id="sec-coupons" class="admin-section">
-        <div class="section-card">
-          <div class="section-title">➕ إنشاء كوبون جديد</div>
-          <div class="form-grid">
-            <div class="field-group"><label class="field-lbl">الكود</label><input class="inp" id="coup-code" placeholder="ALPHA2025" style="text-transform:uppercase"/></div>
-            <div class="field-group"><label class="field-lbl">المكافأة (α)</label><input class="inp" id="coup-reward" type="number" step="0.001" placeholder="10"/></div>
-            <div class="field-group"><label class="field-lbl">الحد الأقصى للاستخدام (0=لانهاية)</label><input class="inp" id="coup-max" type="number" step="1" placeholder="0" value="0"/></div>
-          </div>
-          <div class="btn-row"><button class="btn-action btn-gold" onclick="createCoupon()">➕ إنشاء الكوبون</button></div>
-          <div id="coup-create-msg" class="section-msg"></div>
-        </div>
-        <div class="section-card">
-          <div class="section-title">📋 الكوبونات المنشأة</div>
-          <div id="coupons-list"></div>
-        </div>
+      <div class="section-card">
+        <div class="section-title">📊 إحصائيات الإحالة</div>
+        <div id="referral-stats"><div style="color:var(--text3);font-size:.85rem">جار التحميل…</div></div>
       </div>
+    </div>
 
-      <!-- ════ CARDS ════ -->
-      <div id="sec-cards" class="admin-section">
-        <div class="section-card">
-          <div class="section-title">➕ إنشاء / تعديل بطاقة</div>
-          <div class="card-form-grid">
-            <div class="field-group" style="grid-column:1/-1"><label class="field-lbl">عنوان البطاقة</label><input class="inp" id="card-title" placeholder="عرض نهاية الأسبوع 🎉" maxlength="60"/></div>
-            <div class="field-group" style="grid-column:1/-1"><label class="field-lbl">وصف</label><input class="inp" id="card-desc" placeholder="احصل على مكافأة خاصة لفترة محدودة" maxlength="120"/></div>
-            <div class="field-group"><label class="field-lbl">المكافأة (α)</label><input class="inp" id="card-reward" type="number" step="0.001" placeholder="10"/></div>
-            <div class="field-group"><label class="field-lbl">أيقونة</label><input class="inp" id="card-icon" placeholder="🎁" maxlength="4" style="font-size:1.3rem;text-align:center"/></div>
-            <div class="field-group"><label class="field-lbl">اللون</label>
-              <select class="inp" id="card-color">
-                <option value="gold">🟡 ذهبي</option><option value="blue">🔵 أزرق</option>
-                <option value="green">🟢 أخضر</option><option value="purple">🟣 بنفسجي</option><option value="red">🔴 أحمر</option>
-              </select>
-            </div>
-            <div class="field-group"><label class="field-lbl">الحد الأقصى (0=لانهاية)</label><input class="inp" id="card-max-uses" type="number" step="1" placeholder="0" value="0"/></div>
-            <div class="field-group"><label class="field-lbl">وقت البداية</label><input class="inp" id="card-start" type="datetime-local"/></div>
-            <div class="field-group"><label class="field-lbl">وقت الانتهاء</label><input class="inp" id="card-end" type="datetime-local"/></div>
-          </div>
-          <div class="btn-row">
-            <button class="btn-action btn-gold" id="create-card-btn">➕ إنشاء البطاقة</button>
-            <button class="btn-action" id="preview-card-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">👁 معاينة</button>
-            <button class="btn-action btn-red" id="cancel-edit-btn" style="display:none" onclick="cancelCardEdit()">✕ إلغاء التعديل</button>
-          </div>
-          <div id="card-preview-wrap" style="display:none;margin-top:.8rem"></div>
-          <div id="card-create-msg" class="section-msg"></div>
+    <!-- COUPONS -->
+    <div id="sec-coupons" class="admin-section">
+      <div class="section-card">
+        <div class="section-title">➕ إنشاء كوبون جديد</div>
+        <div class="form-grid">
+          <div class="field-group"><label class="field-lbl">الكود</label><input class="inp" id="coup-code" placeholder="ALPHA2025" style="text-transform:uppercase"/></div>
+          <div class="field-group"><label class="field-lbl">المكافأة (α)</label><input class="inp" id="coup-reward" type="number" step="0.001" placeholder="10"/></div>
+          <div class="field-group"><label class="field-lbl">الحد الأقصى للاستخدام (0=لانهاية)</label><input class="inp" id="coup-max" type="number" step="1" placeholder="0" value="0"/></div>
         </div>
-        <div class="section-card">
-          <div class="section-title">📋 البطاقات المنشأة</div>
-          <div id="cards-list"></div>
-        </div>
+        <div class="btn-row"><button class="btn-action btn-gold" onclick="createCoupon()">➕ إنشاء الكوبون</button></div>
+        <div id="coup-create-msg" class="section-msg"></div>
       </div>
-
-      <!-- ════ LEADERBOARD ADMIN ════ -->
-      <div id="sec-leaderboard-admin" class="admin-section">
-        <div class="section-card">
-          <div class="section-title">🏆 أفضل 20 مستخدماً حسب الرصيد</div>
-          <div id="admin-leaderboard-list"></div>
-        </div>
+      <div class="section-card">
+        <div class="section-title">📋 الكوبونات المنشأة</div>
+        <div id="coupons-list"></div>
       </div>
+    </div>
 
-    </main>
-  </div>
+    <!-- CARDS -->
+    <div id="sec-cards" class="admin-section">
+      <div class="section-card" id="card-create-form-wrap">
+        <div class="section-title">➕ إنشاء / تعديل بطاقة</div>
+        <div class="card-form-grid">
+          <div class="field-group" style="grid-column:1/-1"><label class="field-lbl">عنوان البطاقة</label><input class="inp" id="card-title" placeholder="عرض نهاية الأسبوع 🎉" maxlength="60"/></div>
+          <div class="field-group" style="grid-column:1/-1"><label class="field-lbl">وصف</label><input class="inp" id="card-desc" placeholder="احصل على مكافأة خاصة لفترة محدودة" maxlength="120"/></div>
+          <div class="field-group"><label class="field-lbl">المكافأة (α)</label><input class="inp" id="card-reward" type="number" step="0.001" placeholder="10"/></div>
+          <div class="field-group"><label class="field-lbl">أيقونة</label><input class="inp" id="card-icon" placeholder="🎁" maxlength="4" style="font-size:1.3rem;text-align:center"/></div>
+          <div class="field-group"><label class="field-lbl">اللون</label>
+            <select class="inp" id="card-color">
+              <option value="gold">🟡 ذهبي</option>
+              <option value="blue">🔵 أزرق</option>
+              <option value="green">🟢 أخضر</option>
+              <option value="purple">🟣 بنفسجي</option>
+              <option value="red">🔴 أحمر</option>
+            </select>
+          </div>
+          <div class="field-group"><label class="field-lbl">الحد الأقصى (0=لانهاية)</label><input class="inp" id="card-max-uses" type="number" step="1" placeholder="0" value="0"/></div>
+          <div class="field-group"><label class="field-lbl">وقت البداية</label><input class="inp" id="card-start" type="datetime-local"/></div>
+          <div class="field-group"><label class="field-lbl">وقت الانتهاء</label><input class="inp" id="card-end" type="datetime-local"/></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-action btn-gold" id="create-card-btn">➕ إنشاء البطاقة</button>
+          <button class="btn-action" id="preview-card-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">👁 معاينة</button>
+          <button class="btn-action btn-red" id="cancel-edit-btn" style="display:none" onclick="cancelCardEdit()">✕ إلغاء التعديل</button>
+        </div>
+        <div id="card-preview-wrap" style="display:none;margin-top:.8rem"></div>
+        <div id="card-create-msg" class="section-msg"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title">📋 البطاقات المنشأة</div>
+        <div id="cards-list"></div>
+      </div>
+    </div>
 
-  <!-- Toast -->
-  <div id="toast" class="toast"></div>
-  <script type="module" src="admin.js"></script>
-  </body>
-  </html>
+    <!-- LEADERBOARD ADMIN -->
+    <div id="sec-leaderboard-admin" class="admin-section">
+      <div class="section-card">
+        <div class="section-title">🏆 أفضل 20 مستخدماً حسب الرصيد</div>
+        <div id="admin-leaderboard-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>
