@@ -2,50 +2,33 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   import {
     GoogleAuthProvider,
     signInWithPopup,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import {
-    ref, get, set, update, onValue, query, orderByChild, equalTo
+    ref, get, set, update, onValue
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-  // ── DOM refs ───────────────────────────────────────────────────
-  const loadingEl    = document.getElementById("loading");
-  const authScreen   = document.getElementById("auth-screen");
-  const gameContainer= document.getElementById("game-container");
-
-  // Auth
+  // ── DOM ────────────────────────────────────────────────────────
+  const loadingEl      = document.getElementById("loading");
+  const authScreen     = document.getElementById("auth-screen");
+  const gameContainer  = document.getElementById("game-container");
   const googleLoginBtn = document.getElementById("google-login-btn");
-  const loginEmail   = document.getElementById("login-email");
-  const loginPass    = document.getElementById("login-pass");
-  const loginBtn     = document.getElementById("login-btn");
-  const loginErr     = document.getElementById("login-err");
-  const regUser      = document.getElementById("reg-user");
-  const regEmail     = document.getElementById("reg-email");
-  const regCc        = document.getElementById("reg-cc");
-  const regPhone     = document.getElementById("reg-phone");
-  const regPass      = document.getElementById("reg-pass");
-  const regPass2     = document.getElementById("reg-pass2");
-  const regBtn       = document.getElementById("reg-btn");
-  const regErr       = document.getElementById("reg-err");
-
-  // Game
-  const userNameEl   = document.getElementById("user-name");
-  const userPhotoEl  = document.getElementById("user-photo");
-  const logoutBtn    = document.getElementById("logout-btn");
-  const balanceEl    = document.getElementById("balance");
-  const totalMinedEl = document.getElementById("total-mined");
-  const dailyCountEl = document.getElementById("daily-count");
-  const minesLeftEl  = document.getElementById("mines-left");
-  const mineBtn      = document.getElementById("mine-btn");
-  const couponInp    = document.getElementById("coupon-code");
-  const redeemBtn    = document.getElementById("redeem-btn");
-  const couponMsg    = document.getElementById("coupon-msg");
-  const lbBody       = document.getElementById("leaderboard");
-  const toastEl      = document.getElementById("toast");
-  const adminBtnWrap = document.getElementById("admin-btn-wrap");
+  const authErr        = document.getElementById("auth-err");
+  const userNameEl     = document.getElementById("user-name");
+  const userPhotoEl    = document.getElementById("user-photo");
+  const logoutBtn      = document.getElementById("logout-btn");
+  const balanceEl      = document.getElementById("balance");
+  const totalMinedEl   = document.getElementById("total-mined");
+  const dailyCountEl   = document.getElementById("daily-count");
+  const minesLeftEl    = document.getElementById("mines-left");
+  const mineBtn        = document.getElementById("mine-btn");
+  const couponInp      = document.getElementById("coupon-code");
+  const redeemBtn      = document.getElementById("redeem-btn");
+  const couponMsg      = document.getElementById("coupon-msg");
+  const lbBody         = document.getElementById("leaderboard");
+  const toastEl        = document.getElementById("toast");
+  const adminBtnWrap   = document.getElementById("admin-btn-wrap");
 
   // ── Particles ─────────────────────────────────────────────────
   (function () {
@@ -67,27 +50,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => (toastEl.className = "toast"), 2800);
   }
-
-  // ── Auth tabs ──────────────────────────────────────────────────
-  document.querySelectorAll(".auth-tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".auth-tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const tab = btn.dataset.atab;
-      document.getElementById("atab-login").style.display    = tab === "login"    ? "flex" : "none";
-      document.getElementById("atab-register").style.display = tab === "register" ? "flex" : "none";
-      clearErrors();
-    });
-  });
-
-  // ── Password toggle ────────────────────────────────────────────
-  document.querySelectorAll(".pass-toggle").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const inp = document.getElementById(btn.dataset.target);
-      inp.type = inp.type === "password" ? "text" : "password";
-      btn.textContent = inp.type === "password" ? "👁" : "🙈";
-    });
-  });
 
   // ── App tabs ───────────────────────────────────────────────────
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -111,130 +73,42 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   googleLoginBtn.addEventListener("click", async () => {
     googleLoginBtn.disabled = true;
     googleLoginBtn.textContent = "جار الدخول…";
+    authErr.textContent = "";
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
       const msgs = {
         "auth/popup-closed-by-user":    "أُغلقت النافذة قبل اكتمال الدخول",
-        "auth/popup-blocked":           "تم حجب النافذة — يرجى السماح بها في المتصفح",
+        "auth/popup-blocked":           "النافذة المنبثقة محجوبة — يرجى السماح بها في المتصفح",
         "auth/cancelled-popup-request": "تم إلغاء الطلب",
-        "auth/network-request-failed":  "خطأ في الاتصال",
+        "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
       };
-      showToast(msgs[e.code] || ("خطأ: " + e.message), "err");
+      authErr.textContent = msgs[e.code] || ("خطأ: " + e.message);
       googleLoginBtn.disabled = false;
-      googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/> الدخول بحساب Google`;
+      googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
     }
   });
-
-  // ── Email Login ────────────────────────────────────────────────
-  loginBtn.addEventListener("click", doLogin);
-  loginPass.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-  loginEmail.addEventListener("keydown", e => { if (e.key === "Enter") loginPass.focus(); });
-
-  async function doLogin() {
-    const email    = loginEmail.value.trim().toLowerCase();
-    const password = loginPass.value;
-    if (!email || !email.includes("@")) { setErr(loginErr, "أدخل بريداً إلكترونياً صحيحاً"); return; }
-    if (!password) { setErr(loginErr, "أدخل كلمة المرور"); return; }
-    setErr(loginErr, "");
-    loginBtn.disabled = true;
-    loginBtn.textContent = "جار الدخول…";
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      setErr(loginErr, authError(e.code));
-      loginBtn.disabled = false;
-      loginBtn.textContent = "دخول ⚡";
-    }
-  }
-
-  // ── Email Register ─────────────────────────────────────────────
-  regBtn.addEventListener("click", doRegister);
-  regPass2.addEventListener("keydown", e => { if (e.key === "Enter") doRegister(); });
-
-  async function doRegister() {
-    const username  = regUser.value.trim().toLowerCase();
-    const email     = regEmail.value.trim().toLowerCase();
-    const phone     = (regCc.value + regPhone.value.replace(/\D/g, "").replace(/^0+/, "")).trim();
-    const password  = regPass.value;
-    const password2 = regPass2.value;
-
-    if (!username || username.length < 3)         { setErr(regErr, "اسم المستخدم 3 أحرف على الأقل"); return; }
-    if (!/^[a-z0-9_]+$/.test(username))           { setErr(regErr, "اسم المستخدم: أحرف إنجليزية وأرقام وشرطة سفلية فقط"); return; }
-    if (username === ADMIN_USERNAME)               { setErr(regErr, "اسم المستخدم هذا محجوز"); return; }
-    if (!email || !email.includes("@"))            { setErr(regErr, "أدخل بريداً إلكترونياً صحيحاً"); return; }
-    if (regPhone.value.replace(/\D/g, "").length < 7) { setErr(regErr, "أدخل رقم هاتف صحيح"); return; }
-    if (password.length < 8)                      { setErr(regErr, "كلمة المرور 8 أحرف على الأقل"); return; }
-    if (password !== password2)                   { setErr(regErr, "كلمتا المرور غير متطابقتين"); return; }
-
-    setErr(regErr, "");
-    regBtn.disabled = true;
-    regBtn.textContent = "جار الإنشاء…";
-
-    try {
-      const usnap = await get(query(ref(db, "users"), orderByChild("username"), equalTo(username)));
-      if (usnap.exists()) {
-        setErr(regErr, "اسم المستخدم مأخوذ، جرّب اسماً آخر");
-        regBtn.disabled = false;
-        regBtn.textContent = "إنشاء الحساب";
-        return;
-      }
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await set(ref(db, `users/${cred.user.uid}`), {
-        username, email, phone,
-        balance: 0, totalMined: 0,
-        lastMineDate: "", dailyMineCount: 0,
-        createdAt: Date.now()
-      });
-    } catch (e) {
-      setErr(regErr, authError(e.code));
-      regBtn.disabled = false;
-      regBtn.textContent = "إنشاء الحساب";
-    }
-  }
 
   // ── Auth state ─────────────────────────────────────────────────
   onAuthStateChanged(auth, async user => {
     loadingEl.style.display = "none";
     if (user) {
       currentUser = user;
-      showGame();
+      authScreen.style.display   = "none";
+      gameContainer.style.display = "flex";
       await ensureUserRecord(user);
       listenUserData(user.uid);
     } else {
       currentUser = null;
       userData    = null;
-      showAuth();
+      authScreen.style.display   = "flex";
+      gameContainer.style.display = "none";
+      googleLoginBtn.disabled = false;
+      googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
     }
   });
 
-  function showGame() {
-    authScreen.style.display  = "none";
-    gameContainer.style.display = "flex";
-    resetAuthForms();
-  }
-
-  function showAuth() {
-    authScreen.style.display  = "flex";
-    gameContainer.style.display = "none";
-  }
-
   logoutBtn.addEventListener("click", () => signOut(auth));
-
-  function resetAuthForms() {
-    if (loginEmail) loginEmail.value = "";
-    if (loginPass)  loginPass.value  = "";
-    if (regUser)    regUser.value    = "";
-    if (regEmail)   regEmail.value   = "";
-    if (regPhone)   regPhone.value   = "";
-    if (regPass)    regPass.value    = "";
-    if (regPass2)   regPass2.value   = "";
-    loginBtn.disabled = false; loginBtn.textContent = "دخول ⚡";
-    regBtn.disabled   = false; regBtn.textContent   = "إنشاء الحساب";
-    googleLoginBtn.disabled = false;
-    googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/> الدخول بحساب Google`;
-    clearErrors();
-  }
 
   // ── Ensure user record ─────────────────────────────────────────
   async function ensureUserRecord(user) {
@@ -243,15 +117,15 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       const raw   = user.displayName || user.email || user.uid;
       const uname = raw.split("@")[0].replace(/[^a-z0-9_]/gi, "_").toLowerCase().slice(0, 20);
       await set(ref(db, `users/${user.uid}`), {
-        username:      uname,
-        email:         user.email || "",
-        phone:         "",
-        photoURL:      user.photoURL || "",
-        balance:       0,
-        totalMined:    0,
-        lastMineDate:  "",
-        dailyMineCount:0,
-        createdAt:     Date.now()
+        username:       uname,
+        email:          user.email    || "",
+        photoURL:       user.photoURL || "",
+        phone:          "",
+        balance:        0,
+        totalMined:     0,
+        lastMineDate:   "",
+        dailyMineCount: 0,
+        createdAt:      Date.now()
       });
     }
   }
@@ -262,7 +136,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       if (!snap.exists()) return;
       userData = snap.val();
       updateBalanceUI();
-
       userNameEl.textContent = userData.username || "";
       if (userData.photoURL) {
         userPhotoEl.src = userData.photoURL;
@@ -280,7 +153,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const sameDay  = userData.lastMineDate === todayKey;
     const count    = sameDay ? (userData.dailyMineCount || 0) : 0;
     const left     = Math.max(0, 50 - count);
-
     balanceEl.textContent    = (userData.balance    || 0).toFixed(4);
     totalMinedEl.textContent = (userData.totalMined || 0).toFixed(4);
     dailyCountEl.textContent = count;
@@ -298,7 +170,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   mineBtn.addEventListener("click", async () => {
     if (!currentUser || !userData) return;
     mineBtn.disabled = true;
-
     const todayKey = todayStr();
     const sameDay  = userData.lastMineDate === todayKey;
     const dailyC   = sameDay ? (userData.dailyMineCount || 0) : 0;
@@ -307,7 +178,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const reward   = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
     const newBal   = parseFloat(((userData.balance    || 0) + reward).toFixed(4));
     const newTotal = parseFloat(((userData.totalMined || 0) + reward).toFixed(4));
-
     try {
       await update(ref(db, `users/${currentUser.uid}`), {
         balance:        newBal,
@@ -325,7 +195,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
 
   function spawnReward(text) {
     const el = document.createElement("div");
-    el.className = "float-reward";
+    el.className   = "float-reward";
     el.textContent = text;
     const r = mineBtn.getBoundingClientRect();
     el.style.left = r.left + r.width / 2 - 55 + "px";
@@ -342,23 +212,18 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const code = couponInp.value.trim().toUpperCase();
     if (!code) { setCouponMsg("أدخل كود القسيمة", "err"); return; }
     if (!currentUser || !userData) return;
-
     redeemBtn.disabled = true;
     setCouponMsg("جار التحقق…", "");
-
     try {
       const cpSnap = await get(ref(db, `coupons/${code}`));
       if (!cpSnap.exists())  { setCouponMsg("القسيمة غير موجودة", "err"); return; }
       const cp = cpSnap.val();
       if (!cp.isActive)      { setCouponMsg("القسيمة غير نشطة", "err"); return; }
-
       const usedBy = cp.usedBy && typeof cp.usedBy === "object" ? cp.usedBy : {};
       if (usedBy[currentUser.uid]) { setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
-
       const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
       await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
       await update(ref(db, `coupons/${code}/usedBy`), { [currentUser.uid]: true });
-
       setCouponMsg(`تم! +α${cp.rewardAmount} 🎉`, "ok");
       couponInp.value = "";
       showToast(`+α${cp.rewardAmount} تم استبدال القسيمة!`);
@@ -386,7 +251,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       const users = [];
       snap.forEach(c => users.push({ uid: c.key, ...c.val() }));
       users.sort((a, b) => (b.balance || 0) - (a.balance || 0));
-
       lbBody.innerHTML = users.map((u, i) => {
         const rank  = i + 1;
         const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
@@ -394,11 +258,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
         const isYou = currentUser && u.uid === currentUser.uid;
         return `<tr class="${isYou ? "lb-you" : ""}">
           <td><span class="lb-rank ${cls}">${medal}</span></td>
-          <td>
-            <div class="lb-name-cell">⚡ ${u.username || "مجهول"}
-              ${isYou ? "<span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}
-            </div>
-          </td>
+          <td><div class="lb-name-cell">⚡ ${u.username || "مجهول"}${isYou ? " <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</div></td>
           <td><span class="lb-balance">α${(u.balance || 0).toFixed(4)}</span></td>
           <td style="color:#888">α${(u.totalMined || 0).toFixed(4)}</td>
         </tr>`;
@@ -411,16 +271,19 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   // ── loadProfile ────────────────────────────────────────────────
   async function loadProfile() {
     if (!currentUser || !userData) return;
-
-    document.getElementById("profile-name").textContent  = userData.username    || "";
-    document.getElementById("profile-email").textContent = userData.email       || currentUser.email || "";
-    document.getElementById("profile-balance").textContent = (userData.balance  || 0).toFixed(4);
+    const photoEl    = document.getElementById("profile-photo");
+    const fallbackEl = document.getElementById("profile-avatar-fallback");
+    if (userData.photoURL) {
+      photoEl.src = userData.photoURL;
+      photoEl.style.display    = "block";
+      fallbackEl.style.display = "none";
+    }
+    document.getElementById("profile-name").textContent    = userData.username || currentUser.displayName || "";
+    document.getElementById("profile-email").textContent   = userData.email    || currentUser.email       || "";
+    document.getElementById("profile-balance").textContent = (userData.balance    || 0).toFixed(4);
     document.getElementById("profile-total").textContent   = (userData.totalMined || 0).toFixed(4);
-
     const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount || 0) : 0;
-    document.getElementById("profile-daily").textContent = `${count}/50`;
-
-    // Calculate rank
+    document.getElementById("profile-daily").textContent   = `${count}/50`;
     try {
       const snap = await get(ref(db, "users"));
       if (snap.exists()) {
@@ -431,27 +294,5 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
         document.getElementById("profile-rank").textContent = idx >= 0 ? `#${idx + 1}` : "-";
       }
     } catch {}
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────
-  function setErr(el, msg) { if (el) el.textContent = msg; }
-  function clearErrors() {
-    setErr(loginErr, "");
-    setErr(regErr,   "");
-  }
-
-  function authError(code) {
-    const m = {
-      "auth/user-not-found":         "البريد الإلكتروني غير مسجل",
-      "auth/wrong-password":         "كلمة المرور خاطئة",
-      "auth/invalid-credential":     "البريد الإلكتروني أو كلمة المرور خاطئة",
-      "auth/email-already-in-use":   "هذا البريد الإلكتروني مسجل بالفعل",
-      "auth/weak-password":          "كلمة المرور ضعيفة (8 أحرف على الأقل)",
-      "auth/too-many-requests":      "محاولات كثيرة، انتظر قليلاً",
-      "auth/network-request-failed": "خطأ في الاتصال، تحقق من الإنترنت",
-      "auth/invalid-email":          "صيغة البريد الإلكتروني غير صحيحة",
-      "auth/operation-not-allowed":  "يجب تفعيل Email/Password في Firebase Console",
-    };
-    return m[code] || `خطأ: ${code}`;
   }
   
