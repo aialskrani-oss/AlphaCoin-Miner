@@ -284,8 +284,12 @@ async function redeemCoupon() {
     if (!snap.exists())   { setCouponMsg("القسيمة غير موجودة", "err"); return; }
     const cp = snap.val();
     if (!cp.isActive)     { setCouponMsg("القسيمة غير نشطة", "err"); return; }
-    const used = cp.usedBy ? Object.values(cp.usedBy) : [];
-    if (used.includes(currentUser.uid)) { setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
+    const usedBy = (cp.usedBy && typeof cp.usedBy === 'object' && !Array.isArray(cp.usedBy)) ? cp.usedBy : {};
+      if (usedBy[currentUser.uid]) { setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
+      const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
+      await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
+      await update(ref(db, `coupons/${code}/usedBy`), { [currentUser.uid]: true });
+      setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
     const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
     await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
     await update(cpRef, { usedBy: [...used, currentUser.uid] });
