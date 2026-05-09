@@ -1,199 +1,240 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>AlphaCoin Miner</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
-</head>
-<body>
-<div id="particles"></div>
+  <html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <title>AlphaCoin Miner</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+  </head>
+  <body>
+  <div id="particles"></div>
 
-<div id="loading">
-  <div class="spinner"></div>
-</div>
-
-<div id="app">
-
-  <!-- ══ AUTH ══ -->
-  <div id="auth-screen">
-    <div class="auth-logo">
-      <div class="icon">⚡</div>
-      <div class="title">AlphaCoin</div>
-      <div class="sub">MINER</div>
-    </div>
-
-    <div class="auth-card">
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <button class="auth-tab-btn active" data-atab="login">تسجيل الدخول</button>
-        <button class="auth-tab-btn" data-atab="register">إنشاء حساب</button>
-      </div>
-
-      <!-- Login -->
-      <div id="atab-login" class="auth-form">
-        <div class="field">
-          <label>البريد الإلكتروني</label>
-          <input class="inp" id="login-email" type="email" placeholder="example@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false" dir="ltr"/>
-        </div>
-        <div class="field">
-          <label>كلمة المرور</label>
-          <div class="pass-wrap">
-            <input class="inp" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
-            <button class="pass-toggle" data-target="login-pass" type="button">👁</button>
-          </div>
-        </div>
-        <div class="auth-err" id="login-err"></div>
-        <button class="btn-submit" id="login-btn">دخول ⚡</button>
-      </div>
-
-      <!-- Register -->
-      <div id="atab-register" class="auth-form" style="display:none">
-        <div class="field">
-          <label>اسم المستخدم</label>
-          <input class="inp" id="reg-user" type="text" placeholder="اختر اسم مستخدم" autocapitalize="none" spellcheck="false" autocomplete="username"/>
-        </div>
-        </div>
-        <div class="field">
-          <label>البريد الإلكتروني</label>
-          <input class="inp" id="reg-email" type="email" placeholder="example@gmail.com" autocomplete="email" autocapitalize="none" spellcheck="false" dir="ltr"/>
-        <div class="field">
-          <label>رقم الهاتف</label>
-          <div class="phone-row">
-            <select class="inp" id="reg-cc">
-              <option value="+966">🇸🇦 +966</option>
-              <option value="+971">🇦🇪 +971</option>
-              <option value="+965">🇰🇼 +965</option>
-              <option value="+973">🇧🇭 +973</option>
-              <option value="+974">🇶🇦 +974</option>
-              <option value="+968">🇴🇲 +968</option>
-              <option value="+967">🇾🇪 +967</option>
-              <option value="+962">🇯🇴 +962</option>
-              <option value="+964">🇮🇶 +964</option>
-              <option value="+963">🇸🇾 +963</option>
-              <option value="+961">🇱🇧 +961</option>
-              <option value="+20">🇪🇬 +20</option>
-              <option value="+212">🇲🇦 +212</option>
-              <option value="+213">🇩🇿 +213</option>
-              <option value="+216">🇹🇳 +216</option>
-              <option value="+1">🇺🇸 +1</option>
-              <option value="+44">🇬🇧 +44</option>
-              <option value="+90">🇹🇷 +90</option>
-              <option value="+92">🇵🇰 +92</option>
-              <option value="+91">🇮🇳 +91</option>
-            </select>
-            <input class="inp" id="reg-phone" type="tel" placeholder="5xxxxxxxx" inputmode="numeric" style="direction:ltr;flex:1"/>
-          </div>
-        </div>
-        <div class="field">
-          <label>كلمة المرور</label>
-          <div class="pass-wrap">
-            <input class="inp" id="reg-pass" type="password" placeholder="8 أحرف على الأقل" autocomplete="new-password"/>
-            <button class="pass-toggle" data-target="reg-pass" type="button">👁</button>
-          </div>
-        </div>
-        <div class="field">
-          <label>تأكيد كلمة المرور</label>
-          <div class="pass-wrap">
-            <input class="inp" id="reg-pass2" type="password" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password"/>
-            <button class="pass-toggle" data-target="reg-pass2" type="button">👁</button>
-          </div>
-        </div>
-        <div class="auth-err" id="reg-err"></div>
-        <button class="btn-submit" id="reg-btn">إنشاء الحساب</button>
-      </div>
-    </div>
+  <!-- ══ LOADING ══ -->
+  <div id="loading">
+    <div class="spinner"></div>
   </div>
 
-  <!-- ══ MAIN ══ -->
-  <div id="main-screen">
-    <nav>
-      <div class="nav-brand">⚡ AlphaCoin</div>
-      <div class="nav-right">
-        <span class="nav-username" id="nav-name"></span>
-        <button class="btn-logout" id="btn-logout">خروج</button>
-      </div>
-    </nav>
+  <div id="app">
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="mine">⛏ تعدين</button>
-      <button class="tab-btn" data-tab="leaderboard">🏆 المتصدرون</button>
-      <button class="tab-btn" data-tab="profile">👤 حسابي</button>
+    <!-- ══ AUTH SCREEN ══ -->
+    <div id="auth-screen" style="display:none">
+      <div class="auth-logo">
+        <div class="icon">⚡</div>
+        <div class="title">AlphaCoin</div>
+        <div class="sub">MINER</div>
+      </div>
+
+      <!-- Google Login -->
+      <button class="btn-google-login" id="google-login-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/>
+        الدخول بحساب Google
+      </button>
+
+      <div class="auth-divider"><span>أو</span></div>
+
+      <!-- Email/Password Tabs -->
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab-btn active" data-atab="login">تسجيل الدخول</button>
+          <button class="auth-tab-btn" data-atab="register">إنشاء حساب</button>
+        </div>
+
+        <!-- Login -->
+        <div id="atab-login" class="auth-form">
+          <div class="field">
+            <label>البريد الإلكتروني</label>
+            <input class="inp" id="login-email" type="email" placeholder="example@gmail.com"
+                   autocomplete="email" autocapitalize="none" spellcheck="false" dir="ltr"/>
+          </div>
+          <div class="field">
+            <label>كلمة المرور</label>
+            <div class="pass-wrap">
+              <input class="inp" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+              <button class="pass-toggle" data-target="login-pass" type="button">👁</button>
+            </div>
+          </div>
+          <div class="auth-err" id="login-err"></div>
+          <button class="btn-submit" id="login-btn">دخول ⚡</button>
+        </div>
+
+        <!-- Register -->
+        <div id="atab-register" class="auth-form" style="display:none">
+          <div class="field">
+            <label>اسم المستخدم</label>
+            <input class="inp" id="reg-user" type="text" placeholder="اختر اسم مستخدم"
+                   autocapitalize="none" spellcheck="false" autocomplete="username"/>
+          </div>
+          <div class="field">
+            <label>البريد الإلكتروني</label>
+            <input class="inp" id="reg-email" type="email" placeholder="example@gmail.com"
+                   autocomplete="email" autocapitalize="none" spellcheck="false" dir="ltr"/>
+          </div>
+          <div class="field">
+            <label>رقم الهاتف</label>
+            <div class="phone-row">
+              <select class="inp" id="reg-cc">
+                <option value="+966">🇸🇦 +966</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+965">🇰🇼 +965</option>
+                <option value="+973">🇧🇭 +973</option>
+                <option value="+974">🇶🇦 +974</option>
+                <option value="+968">🇴🇲 +968</option>
+                <option value="+967">🇾🇪 +967</option>
+                <option value="+962">🇯🇴 +962</option>
+                <option value="+964">🇮🇶 +964</option>
+                <option value="+963">🇸🇾 +963</option>
+                <option value="+961">🇱🇧 +961</option>
+                <option value="+20">🇪🇬 +20</option>
+                <option value="+212">🇲🇦 +212</option>
+                <option value="+213">🇩🇿 +213</option>
+                <option value="+216">🇹🇳 +216</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+90">🇹🇷 +90</option>
+                <option value="+92">🇵🇰 +92</option>
+                <option value="+91">🇮🇳 +91</option>
+              </select>
+              <input class="inp" id="reg-phone" type="tel" placeholder="5xxxxxxxx"
+                     inputmode="numeric" style="direction:ltr;flex:1"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>كلمة المرور</label>
+            <div class="pass-wrap">
+              <input class="inp" id="reg-pass" type="password" placeholder="8 أحرف على الأقل" autocomplete="new-password"/>
+              <button class="pass-toggle" data-target="reg-pass" type="button">👁</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>تأكيد كلمة المرور</label>
+            <div class="pass-wrap">
+              <input class="inp" id="reg-pass2" type="password" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password"/>
+              <button class="pass-toggle" data-target="reg-pass2" type="button">👁</button>
+            </div>
+          </div>
+          <div class="auth-err" id="reg-err"></div>
+          <button class="btn-submit" id="reg-btn">إنشاء الحساب</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Mine -->
-    <div class="tab-content active" id="tab-mine">
-      <div class="mine-section">
-        <div class="balance-card">
-          <div class="balance-label">رصيدك الحالي</div>
-          <div class="balance-amount"><span class="balance-symbol">α</span><span id="balance-val">0.0000</span></div>
-          <div class="balance-stats">
-            <span>إجمالي: <strong id="total-mined">0</strong></span>
-            <span>اليوم: <strong id="daily-count">0</strong>/50</span>
+    <!-- ══ GAME CONTAINER ══ -->
+    <div id="game-container" style="display:none">
+
+      <!-- NAV -->
+      <nav>
+        <div class="nav-brand">⚡ AlphaCoin</div>
+        <div class="nav-right">
+          <img id="user-photo" class="user-avatar" src="" alt="" width="32" height="32"
+               onerror="this.style.display='none'" style="display:none"/>
+          <span class="nav-username" id="user-name"></span>
+          <button class="btn-logout" id="logout-btn">خروج</button>
+        </div>
+      </nav>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="mine">⛏ تعدين</button>
+        <button class="tab-btn" data-tab="leaderboard">🏆 المتصدرون</button>
+        <button class="tab-btn" data-tab="profile">👤 حسابي</button>
+      </div>
+
+      <!-- ── MINE TAB ── -->
+      <div class="tab-content active" id="tab-mine">
+        <div class="mine-section">
+          <div class="balance-card">
+            <div class="balance-label">رصيدك الحالي</div>
+            <div class="balance-amount">
+              <span class="balance-symbol">α</span>
+              <span id="balance">0.0000</span>
+            </div>
+            <div class="balance-stats">
+              <span>إجمالي: <strong id="total-mined">0</strong></span>
+              <span>اليوم: <strong id="daily-count">0</strong>/50</span>
+            </div>
+          </div>
+
+          <div class="mine-btn-wrap">
+            <button class="mine-btn" id="mine-btn">⛏<br>MINE</button>
+            <div class="mine-ring"></div>
+            <div class="mine-ring"></div>
+            <div class="mine-ring"></div>
+          </div>
+
+          <div class="mine-limit">
+            تبقى لك <span id="mines-left">50</span> عملية اليوم
+          </div>
+
+          <!-- COUPON -->
+          <div class="coupon-section">
+            <h3>🎁 استبدال قسيمة</h3>
+            <div class="coupon-input-row">
+              <input class="inp" id="coupon-code" type="text"
+                     placeholder="كود القسيمة" style="direction:ltr"/>
+              <button class="btn-gold" id="redeem-btn">تطبيق</button>
+            </div>
+            <div class="coupon-msg" id="coupon-msg"></div>
           </div>
         </div>
-
-        <div class="mine-btn-wrap">
-          <button class="mine-btn" id="mine-btn">⛏<br>MINE</button>
-          <div class="mine-ring"></div>
-          <div class="mine-ring"></div>
-          <div class="mine-ring"></div>
-        </div>
-
-        <div class="mine-limit">تبقى لك <span id="mines-left">50</span> عملية اليوم</div>
-
-        <div class="coupon-section">
-          <h3>🎁 استبدال قسيمة</h3>
-          <div class="coupon-input-row">
-            <input class="inp" id="coupon-inp" type="text" placeholder="كود القسيمة" style="direction:ltr"/>
-            <button class="btn-gold" id="coupon-btn">تطبيق</button>
-          </div>
-          <div class="coupon-msg" id="coupon-msg"></div>
-        </div>
       </div>
-    </div>
 
-    <!-- Leaderboard -->
-    <div class="tab-content" id="tab-leaderboard">
-      <div class="lb-section">
-        <h2>🏆 لوحة المتصدرين</h2>
-        <div style="overflow-x:auto">
-          <table class="lb-table">
-            <thead>
-              <tr><th>#</th><th>المستخدم</th><th>الرصيد (α)</th><th>الإجمالي</th></tr>
-            </thead>
-            <tbody id="lb-body">
-              <tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Profile -->
-    <div class="tab-content" id="tab-profile">
-      <div class="profile-section">
-        <div class="profile-card">
-          <div class="profile-avatar-icon">⚡</div>
-          <h3 id="profile-name"></h3>
-          <div class="profile-sub" id="profile-phone"></div>
-          <div class="profile-stats">
-            <div class="stat-box"><div class="stat-val" id="profile-balance">0</div><div class="stat-lbl">الرصيد (α)</div></div>
-            <div class="stat-box"><div class="stat-val" id="profile-total">0</div><div class="stat-lbl">إجمالي التعدين</div></div>
-            <div class="stat-box"><div class="stat-val" id="profile-daily">0/50</div><div class="stat-lbl">اليوم</div></div>
-            <div class="stat-box"><div class="stat-val" id="profile-rank">-</div><div class="stat-lbl">ترتيبك</div></div>
+      <!-- ── LEADERBOARD TAB ── -->
+      <div class="tab-content" id="tab-leaderboard">
+        <div class="lb-section">
+          <h2>🏆 لوحة المتصدرين</h2>
+          <div style="overflow-x:auto">
+            <table class="lb-table">
+              <thead>
+                <tr><th>#</th><th>المستخدم</th><th>الرصيد (α)</th><th>الإجمالي</th></tr>
+              </thead>
+              <tbody id="leaderboard">
+                <tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <div id="admin-btn-wrap" style="display:none">
-          <a href="admin.html" class="admin-link-btn">🔐 لوحة الأدمن</a>
+      </div>
+
+      <!-- ── PROFILE TAB ── -->
+      <div class="tab-content" id="tab-profile">
+        <div class="profile-section">
+          <div class="profile-card" id="profile">
+            <div class="profile-avatar-icon">⚡</div>
+            <h3 id="profile-name"></h3>
+            <div class="profile-sub" id="profile-email"></div>
+            <div class="profile-stats">
+              <div class="stat-box">
+                <div class="stat-val" id="profile-balance">0</div>
+                <div class="stat-lbl">الرصيد (α)</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val" id="profile-total">0</div>
+                <div class="stat-lbl">إجمالي التعدين</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val" id="profile-daily">0/50</div>
+                <div class="stat-lbl">اليوم</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-val" id="profile-rank">-</div>
+                <div class="stat-lbl">ترتيبك</div>
+              </div>
+            </div>
+          </div>
+          <div id="admin-btn-wrap" style="display:none">
+            <a href="/admin" class="admin-link-btn">🔐 لوحة الأدمن</a>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<div class="toast" id="toast"></div>
-<script type="module" src="script.js"></script>
-</body>
-</html>
+    </div><!-- /game-container -->
+  </div><!-- /app -->
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="script.js"></script>
+  </body>
+  </html>
