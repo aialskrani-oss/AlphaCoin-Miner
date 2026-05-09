@@ -11,6 +11,8 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     ref, get, set, update, onValue
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
+  const ADMIN_EMAIL = "aialskrani@gmail.com";
+
   // ── DOM ────────────────────────────────────────────────────────
   const loadingEl      = document.getElementById("loading");
   const authScreen     = document.getElementById("auth-screen");
@@ -27,7 +29,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   const mineBtn        = document.getElementById("mine-btn");
   const couponInp      = document.getElementById("coupon-code");
   const redeemBtn      = document.getElementById("redeem-btn");
-  const couponMsg      = document.getElementById("coupon-msg");
+  const couponMsgEl    = document.getElementById("coupon-msg");
   const lbBody         = document.getElementById("leaderboard");
   const toastEl        = document.getElementById("toast");
   const adminBtnWrap   = document.getElementById("admin-btn-wrap");
@@ -70,7 +72,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   let userData    = null;
   const googleProvider = new GoogleAuthProvider();
 
-  // ── Detect mobile ──────────────────────────────────────────────
   function isMobile() {
     return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   }
@@ -82,38 +83,30 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     authErr.textContent = "";
     try {
       if (isMobile()) {
-        // Mobile: use redirect (popup is blocked on mobile browsers)
         await signInWithRedirect(auth, googleProvider);
       } else {
-        // Desktop: use popup
         await signInWithPopup(auth, googleProvider);
       }
     } catch (e) {
-      const msgs = {
-        "auth/popup-closed-by-user":    "أُغلقت النافذة قبل اكتمال الدخول",
-        "auth/popup-blocked":           "جارٍ التحويل لصفحة الدخول…",
-        "auth/cancelled-popup-request": "تم إلغاء الطلب",
-        "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
-      };
-      // If popup was blocked, fall back to redirect
       if (e.code === "auth/popup-blocked") {
         await signInWithRedirect(auth, googleProvider);
         return;
       }
+      const msgs = {
+        "auth/popup-closed-by-user":    "أُغلقت النافذة قبل اكتمال الدخول",
+        "auth/cancelled-popup-request": "تم إلغاء الطلب",
+        "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
+      };
       authErr.textContent = msgs[e.code] || ("خطأ: " + e.message);
       googleLoginBtn.disabled = false;
       googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="24"/> الدخول بحساب Google`;
     }
   });
 
-  // ── Handle redirect result (after Google redirect on mobile) ───
-  getRedirectResult(auth).then(async result => {
-    if (result?.user) {
-      // User signed in via redirect — onAuthStateChanged will handle the rest
-    }
-  }).catch(e => {
+  // ── Handle redirect result ─────────────────────────────────────
+  getRedirectResult(auth).catch(e => {
     if (e.code !== "auth/no-redirect-operation") {
-      console.error("Redirect error:", e.message);
+      authErr && (authErr.textContent = "خطأ في الدخول: " + e.message);
     }
   });
 
@@ -166,17 +159,20 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       updateBalanceUI();
       userNameEl.textContent = userData.username || "";
       if (userData.photoURL) {
-        userPhotoEl.src = userData.photoURL;
+        userPhotoEl.src          = userData.photoURL;
         userPhotoEl.style.display = "block";
       }
       if (adminBtnWrap)
-        adminBtnWrap.style.display = userData.username === ADMIN_USERNAME ? "block" : "none";
+        adminBtnWrap.style.display =
+          (currentUser?.email === ADMIN_EMAIL || userData.username === ADMIN_USERNAME)
+            ? "block" : "none";
     });
   }
 
-  // ── updateBalanceUI ────────────────────────────────────────────
-  function updateBalanceUI() {
+  // ── updateBalanceUI(newBalance?) ───────────────────────────────
+  function updateBalanceUI(newBalance) {
     if (!userData) return;
+    if (newBalance !== undefined) userData.balance = newBalance;
     const todayKey = todayStr();
     const sameDay  = userData.lastMineDate === todayKey;
     const count    = sameDay ? (userData.dailyMineCount || 0) : 0;
@@ -263,11 +259,11 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   }
 
   function setCouponMsg(m, t) {
-    couponMsg.textContent = m;
-    couponMsg.className   = "coupon-msg " + t;
+    couponMsgEl.textContent = m;
+    couponMsgEl.className   = "coupon-msg " + t;
   }
 
-  // ── loadLeaderboard ────────────────────────────────────────────
+  // ── loadLeaderboard() ──────────────────────────────────────────
   async function loadLeaderboard() {
     lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>`;
     try {
@@ -296,13 +292,13 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     }
   }
 
-  // ── loadProfile ────────────────────────────────────────────────
+  // ── loadProfile() ──────────────────────────────────────────────
   async function loadProfile() {
     if (!currentUser || !userData) return;
     const photoEl    = document.getElementById("profile-photo");
     const fallbackEl = document.getElementById("profile-avatar-fallback");
     if (userData.photoURL) {
-      photoEl.src = userData.photoURL;
+      photoEl.src              = userData.photoURL;
       photoEl.style.display    = "block";
       fallbackEl.style.display = "none";
     }
