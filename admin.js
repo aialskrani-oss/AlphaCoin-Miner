@@ -1,6 +1,6 @@
-import { auth, db, ADMIN_EMAIL } from "./firebase-config.js";
+import { auth, db, ADMIN_PHONE } from "./firebase-config.js";
 import {
-  GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   ref, get, set, update, remove, onValue
@@ -57,13 +57,13 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  if (user.email !== ADMIN_EMAIL) {
+  if (user.phoneNumber !== ADMIN_PHONE) {
     deniedView.style.display = "flex";
     return;
   }
 
   adminMain.style.display    = "block";
-  adminUserEmail.textContent = user.email;
+  adminUserEmail.textContent = user.phoneNumber || "Admin";
   loadAll();
 });
 
