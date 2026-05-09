@@ -16,14 +16,14 @@
 
   <div id="app">
 
-    <!-- ══ AUTH SCREEN ══ -->
+    <!-- AUTH SCREEN -->
     <div id="auth-screen" style="display:none">
       <div class="auth-logo">
         <div class="auth-icon">⚡</div>
         <div class="auth-title">AlphaCoin</div>
         <div class="auth-sub">MINER</div>
       </div>
-      <p class="auth-desc">عدّن عملات Alpha يومياً واحصل على مكافآت</p>
+      <p class="auth-desc">عدّن عملات Alpha تلقائياً واحصل على مكافآت</p>
       <button class="btn-google-login" id="google-login-btn">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/>
         الدخول بحساب Google
@@ -31,10 +31,9 @@
       <div class="auth-err" id="auth-err"></div>
     </div>
 
-    <!-- ══ GAME CONTAINER ══ -->
+    <!-- GAME CONTAINER -->
     <div id="game-container" style="display:none">
 
-      <!-- NAV -->
       <nav>
         <div class="nav-brand">⚡ AlphaCoin</div>
         <div class="nav-right">
@@ -44,94 +43,164 @@
         </div>
       </nav>
 
-      <!-- TABS — 2 only -->
       <div class="tabs">
         <button class="tab-btn active" data-tab="mine">⛏ تعدين</button>
+        <button class="tab-btn" data-tab="upgrades">🚀 ترقيات</button>
         <button class="tab-btn" data-tab="profile">👤 حسابي</button>
       </div>
 
-      <!-- ── MINE TAB ── -->
+      <!-- MINE TAB -->
       <div class="tab-content active" id="tab-mine">
         <div class="mine-section">
 
-          <!-- Balance card -->
           <div class="balance-card">
             <div class="bc-label">رصيدك الحالي</div>
             <div class="bc-amount"><span class="bc-sym">α</span><span id="balance">0.0000</span></div>
             <div class="bc-row">
-              <div class="bc-stat"><span class="bc-stat-lbl">إجمالي التعدين</span><span class="bc-stat-val" id="total-mined">0.0000</span></div>
+              <div class="bc-stat">
+                <span class="bc-stat-lbl">إجمالي التعدين</span>
+                <span class="bc-stat-val" id="total-mined">0.0000</span>
+              </div>
               <div class="bc-divider"></div>
-              <div class="bc-stat"><span class="bc-stat-lbl">عمليات اليوم</span><span class="bc-stat-val"><span id="daily-count">0</span><span style="color:#555">/50</span></span></div>
+              <div class="bc-stat">
+                <span class="bc-stat-lbl">قوة التعدين</span>
+                <span class="bc-stat-val"><span id="mining-power-display">1</span>α/ساعة</span>
+              </div>
             </div>
           </div>
 
-          <!-- Mine button -->
-          <div class="mine-area">
-            <div class="mine-rings">
-              <div class="mine-ring r1"></div>
-              <div class="mine-ring r2"></div>
-              <div class="mine-ring r3"></div>
+          <!-- Auto Mining Status Card -->
+          <div class="auto-mine-card" id="auto-mine-card">
+            <div class="auto-mine-header">
+              <div class="auto-mine-icon" id="mine-status-icon">⛏</div>
+              <div class="auto-mine-info">
+                <div class="auto-mine-title" id="mine-status-title">التعدين نشط</div>
+                <div class="auto-mine-sub" id="mine-status-sub">يتم تعدين العملات تلقائياً</div>
+              </div>
+              <div class="auto-mine-badge" id="mine-badge">نشط</div>
             </div>
-            <button class="mine-btn" id="mine-btn">
-              <span class="mine-icon">⛏</span>
-              <span class="mine-label">MINE</span>
+
+            <div class="mine-progress-wrap">
+              <div class="mine-progress-labels">
+                <span>وقت التعدين</span>
+                <span id="mine-time-text">0 / 3 ساعات</span>
+              </div>
+              <div class="mine-progress-bar">
+                <div class="mine-progress-fill" id="mine-progress-fill"></div>
+              </div>
+            </div>
+
+            <div class="mine-stats-row">
+              <div class="mine-stat-box">
+                <div class="mine-stat-val" id="pending-earnings">0.0000</div>
+                <div class="mine-stat-lbl">أرباح معلقة (α)</div>
+              </div>
+              <div class="mine-stat-box">
+                <div class="mine-stat-val" id="time-remaining">--:--:--</div>
+                <div class="mine-stat-lbl">وقت حتى الإيقاف</div>
+              </div>
+              <div class="mine-stat-box">
+                <div class="mine-stat-val" id="mine-rate">1 α/ساعة</div>
+                <div class="mine-stat-lbl">معدل التعدين</div>
+              </div>
+            </div>
+
+            <button class="btn-claim" id="claim-btn">
+              <span>💰 اجنِ الأرباح</span>
             </button>
           </div>
 
-          <div class="mine-status">
-            تبقّى لك <strong id="mines-left">50</strong> عملية اليوم
-          </div>
-
           <!-- Coupon -->
-          <div class="coupon-card">
-            <div class="coupon-title">🎁 استبدال قسيمة</div>
+          <div class="coupon-section">
+            <div class="coupon-label">🎟 كود القسيمة</div>
             <div class="coupon-row">
-              <input class="inp" id="coupon-code" type="text" placeholder="أدخل كود القسيمة" autocomplete="off" spellcheck="false" style="direction:ltr;letter-spacing:2px"/>
-              <button class="btn-redeem" id="redeem-btn">تطبيق</button>
+              <input class="coupon-inp" id="coupon-code" type="text" placeholder="أدخل الكود هنا…" autocomplete="off"/>
+              <button class="btn-redeem" id="redeem-btn">استبدال</button>
             </div>
             <div class="coupon-msg" id="coupon-msg"></div>
           </div>
 
-        </div>
-      </div><!-- /tab-mine -->
+          <div id="admin-btn-wrap" style="display:none;text-align:center;margin-top:1rem">
+            <a href="/admin" class="btn-admin">🔐 لوحة الأدمن</a>
+          </div>
 
-      <!-- ── PROFILE TAB ── -->
+        </div>
+      </div>
+
+      <!-- UPGRADES TAB -->
+      <div class="tab-content" id="tab-upgrades">
+        <div class="upgrades-section">
+          <div class="upgrade-header-text">
+            <h2>🚀 متجر الترقيات</h2>
+            <p>رصيدك: <strong><span id="upgrade-balance">0.0000</span> α</strong></p>
+          </div>
+
+          <!-- Mining Power Upgrades -->
+          <div class="upgrade-group">
+            <div class="upgrade-group-title">⚡ ترقية قوة التعدين</div>
+            <div class="upgrade-group-sub">زيادة كمية العملات المعدّنة في كل ساعة</div>
+            <div class="upgrade-cards" id="power-upgrades">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Duration Upgrades -->
+          <div class="upgrade-group">
+            <div class="upgrade-group-title">⏱ ترقية مدة التعدين</div>
+            <div class="upgrade-group-sub">زيادة الحد الأقصى لساعات التعدين المتواصلة</div>
+            <div class="upgrade-cards" id="duration-upgrades">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
       <div class="tab-content" id="tab-profile">
         <div class="profile-section">
-          <div class="profile-card" id="profile">
-            <div class="profile-avatar-wrap">
-              <img id="profile-photo" class="profile-photo" src="" alt="" style="display:none" onerror="this.style.display='none'"/>
-              <div class="profile-fallback" id="profile-avatar-fallback">⚡</div>
-            </div>
-            <h2 class="profile-name" id="profile-name"></h2>
+          <div class="profile-avatar-wrap">
+            <img id="profile-photo" class="profile-avatar" src="" alt=""/>
+            <div class="profile-username" id="profile-username"></div>
             <div class="profile-email" id="profile-email"></div>
-            <div class="profile-stats">
-              <div class="pstat">
-                <div class="pstat-val" id="profile-balance">0.0000</div>
-                <div class="pstat-lbl">الرصيد (α)</div>
-              </div>
-              <div class="pstat">
-                <div class="pstat-val" id="profile-total">0.0000</div>
-                <div class="pstat-lbl">إجمالي التعدين</div>
-              </div>
-              <div class="pstat">
-                <div class="pstat-val" id="profile-daily">0/50</div>
-                <div class="pstat-lbl">عمليات اليوم</div>
-              </div>
-              <div class="pstat">
-                <div class="pstat-val" id="profile-rank">-</div>
-                <div class="pstat-lbl">الترتيب</div>
-              </div>
-            </div>
           </div>
-          <div id="admin-btn-wrap" style="display:none">
-            <a href="/admin" class="admin-link-btn">🔐 لوحة تحكم الأدمن</a>
+
+          <div class="profile-cards">
+            <div class="profile-card">
+              <div class="pc-icon">💰</div>
+              <div class="pc-val" id="profile-balance">0.0000 α</div>
+              <div class="pc-lbl">الرصيد الحالي</div>
+            </div>
+            <div class="profile-card">
+              <div class="pc-icon">⛏</div>
+              <div class="pc-val" id="profile-total">0.0000 α</div>
+              <div class="pc-lbl">إجمالي التعدين</div>
+            </div>
+            <div class="profile-card">
+              <div class="pc-icon">⚡</div>
+              <div class="pc-val" id="profile-power">1 α/ساعة</div>
+              <div class="pc-lbl">قوة التعدين</div>
+            </div>
+            <div class="profile-card">
+              <div class="pc-icon">⏱</div>
+              <div class="pc-val" id="profile-duration">3 ساعات</div>
+              <div class="pc-lbl">المدة القصوى</div>
+            </div>
+            <div class="profile-card">
+              <div class="pc-icon">🕐</div>
+              <div class="pc-val" id="profile-last-claim">—</div>
+              <div class="pc-lbl">آخر جني للأرباح</div>
+            </div>
+            <div class="profile-card">
+              <div class="pc-icon">🏅</div>
+              <div class="pc-val" id="profile-power-level">المستوى 1</div>
+              <div class="pc-lbl">مستوى قوة التعدين</div>
+            </div>
           </div>
         </div>
-      </div><!-- /tab-profile -->
+      </div>
 
-    </div><!-- /game-container -->
-  </div><!-- /app -->
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
   <script type="module" src="script.js"></script>
