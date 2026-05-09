@@ -1,132 +1,146 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>تسجيل الدخول – AlphaCoin</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0a0a0a;
-      color: #e8e8e8;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      flex-direction: column;
-      gap: 1.4rem;
-      text-align: center;
-      padding: 2rem;
-    }
-    .logo { font-size: 4rem; filter: drop-shadow(0 0 20px #f0b429); }
-    h2 { color: #f0b429; font-size: 1.4rem; }
-    p  { color: #888; font-size: 0.9rem; max-width: 300px; line-height: 1.5; }
-    .btn-google {
-      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-      background: #fff; color: #333;
-      border: none; border-radius: 8px;
-      padding: 0.85rem 2rem;
-      font-size: 1rem; font-weight: 600;
-      cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.15s;
-      margin-top: 0.5rem;
-    }
-    .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,255,255,0.12); }
-    .btn-google:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-google img { width: 22px; }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 4px solid #333;
-      border-top-color: #f0b429;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: none;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .status { font-size: 0.9rem; color: #aaa; min-height: 1.4em; }
-    .status.ok  { color: #2ecc71; }
-    .status.err { color: #e74c3c; }
-  </style>
-</head>
-<body>
-  <div class="logo">⚡</div>
-  <h2>AlphaCoin Miner</h2>
-  <p>سجّل دخولك بحساب Google للمتابعة</p>
+  <html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>تسجيل الدخول – AlphaCoin</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: #0a0a0a;
+        color: #e8e8e8;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        flex-direction: column;
+        gap: 1.4rem;
+        text-align: center;
+        padding: 2rem;
+      }
+      .logo { font-size: 4rem; filter: drop-shadow(0 0 20px #f0b429); }
+      h2 { color: #f0b429; font-size: 1.4rem; }
+      p  { color: #888; font-size: 0.9rem; max-width: 300px; line-height: 1.5; }
+      .btn-google {
+        display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+        background: #fff; color: #333;
+        border: none; border-radius: 8px;
+        padding: 0.85rem 2rem;
+        font-size: 1rem; font-weight: 600;
+        cursor: pointer;
+        transition: box-shadow 0.2s, transform 0.15s;
+        margin-top: 0.5rem;
+      }
+      .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,255,255,0.12); }
+      .btn-google:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+      .btn-google img { width: 22px; }
+      .spinner {
+        width: 36px; height: 36px;
+        border: 4px solid #333;
+        border-top-color: #f0b429;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .status { font-size: 0.9rem; color: #aaa; min-height: 1.4em; }
+      .status.ok  { color: #2ecc71; }
+      .status.err { color: #e74c3c; }
+      .back-link { color: #f0b429; font-size: 0.85rem; text-decoration: none; margin-top: 0.5rem; }
+      .back-link:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="logo">⚡</div>
+    <h2>AlphaCoin Miner</h2>
+    <p>سجّل دخولك بحساب Google للمتابعة</p>
 
-  <button class="btn-google" id="btn">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"/>
-    تسجيل الدخول بـ Google
-  </button>
-  <div class="spinner" id="spinner"></div>
-  <div class="status" id="status"></div>
+    <button class="btn-google" id="btn">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"/>
+      تسجيل الدخول بـ Google
+    </button>
+    <div class="spinner" id="spinner"></div>
+    <p class="status" id="status"></p>
+    <a href="/" class="back-link">← العودة للرئيسية</a>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    <script type="module">
+      import { initializeApp }        from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+      import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+                                      from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+      import { getDatabase, ref, get, set }
+                                      from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDU1VlmzIYRqCjrH-kr-qg10pU4dfx7bfs",
-  authDomain: "aiph-acon.firebaseapp.com",
-  databaseURL: "https://aiph-acon-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "aiph-acon",
-  storageBucket: "aiph-acon.firebasestorage.app",
-  messagingSenderId: "260450986761",
-  appId: "1:260450986761:web:6a33ade232f9831a30a768"
-};
+      const firebaseConfig = {
+        apiKey: "AIzaSyDIsEEXCafhtSizdUHkM6BKaCuTdMH1KUQ",
+        authDomain: "alphacoin-27d62.firebaseapp.com",
+        databaseURL: "https://alphacoin-27d62-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "alphacoin-27d62",
+        storageBucket: "alphacoin-27d62.firebasestorage.app",
+        messagingSenderId: "264895286078",
+        appId: "1:264895286078:web:bae0b3cf7096499637ba6f"
+      };
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const btn      = document.getElementById("btn");
-const spinner  = document.getElementById("spinner");
-const statusEl = document.getElementById("status");
+      const app      = initializeApp(firebaseConfig);
+      const auth     = getAuth(app);
+      const db       = getDatabase(app);
+      const provider = new GoogleAuthProvider();
 
-function setStatus(msg, type = "") {
-  statusEl.textContent = msg;
-  statusEl.className   = "status " + type;
-}
+      const btn      = document.getElementById("btn");
+      const spinner  = document.getElementById("spinner");
+      const status   = document.getElementById("status");
 
-// If already signed in, notify and close
-onAuthStateChanged(auth, user => {
-  if (user) {
-    btn.style.display     = "none";
-    spinner.style.display = "block";
-    setStatus(`✅ تم! مرحباً ${user.displayName || user.email}`, "ok");
-    notifyAndClose();
-  }
-});
+      // If already signed in, redirect immediately
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          status.textContent = "جاري التحويل…";
+          status.className   = "status ok";
+          setTimeout(() => { window.location.href = "/"; }, 800);
+        }
+      });
 
-btn.addEventListener("click", async () => {
-  btn.disabled          = true;
-  spinner.style.display = "block";
-  setStatus("جار الاتصال بـ Google…");
+      btn.addEventListener("click", async () => {
+        btn.disabled        = true;
+        spinner.style.display = "block";
+        status.textContent  = "جاري تسجيل الدخول…";
+        status.className    = "status";
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const user   = result.user;
 
-  try {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
-    const result = await signInWithPopup(auth, provider);
-    setStatus(`✅ مرحباً ${result.user.displayName || result.user.email}`, "ok");
-    notifyAndClose();
-  } catch (e) {
-    btn.disabled          = false;
-    spinner.style.display = "none";
-    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") {
-      setStatus("تم إلغاء تسجيل الدخول", "");
-    } else {
-      setStatus("خطأ: " + (e.message || e.code), "err");
-    }
-  }
-});
+          // Create a user record if first time signing in with Google
+          const userRef  = ref(db, "users/" + user.uid);
+          const snapshot = await get(userRef);
+          if (!snapshot.exists()) {
+            const uname = (user.displayName || user.email || user.uid)
+              .toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 20);
+            await set(userRef, {
+              username: uname,
+              phone: "",
+              balance: 0,
+              totalMined: 0,
+              lastMineDate: "",
+              dailyMineCount: 0,
+              createdAt: Date.now()
+            });
+          }
 
-function notifyAndClose() {
-  try {
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ type: "AUTH_SUCCESS" }, "*");
-    }
-  } catch (_) {}
-  setTimeout(() => window.close(), 1000);
-}
-</script>
-</body>
-</html>
+          status.textContent  = "تم تسجيل الدخول! جاري التحويل…";
+          status.className    = "status ok";
+          setTimeout(() => { window.location.href = "/"; }, 1000);
+        } catch (err) {
+          const msgs = {
+            "auth/popup-closed-by-user":    "أُغلق النافذة قبل اكتمال تسجيل الدخول",
+            "auth/popup-blocked":           "تم حجب النافذة المنبثقة، يرجى السماح بها في متصفحك",
+            "auth/cancelled-popup-request": "تم إلغاء الطلب",
+            "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
+          };
+          status.textContent = msgs[err.code] || ("خطأ: " + err.message);
+          status.className   = "status err";
+          btn.disabled       = false;
+          spinner.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+  </html>
