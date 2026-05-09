@@ -26,12 +26,75 @@
       <div class="logo-sub">MINER</div>
     </div>
     <div class="auth-card">
-      <h2>ابدأ التعدين الآن</h2>
-      <p>سجّل دخولك بحساب Google واحصل على AlphaCoins مجاناً كل يوم</p>
-      <button class="btn-google" id="btn-login">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"/>
-        تسجيل الدخول بـ Google
-      </button>
+
+      <!-- Step 1: Phone number -->
+      <div id="step-phone">
+        <h2>أدخل رقم هاتفك</h2>
+        <p>سنرسل لك رمز تحقق عبر SMS</p>
+
+        <div class="phone-row">
+          <select class="inp" id="country-code" style="width:100px;flex-shrink:0;direction:ltr;text-align:center">
+            <option value="+966">🇸🇦 +966</option>
+            <option value="+971">🇦🇪 +971</option>
+            <option value="+965">🇰🇼 +965</option>
+            <option value="+973">🇧🇭 +973</option>
+            <option value="+974">🇶🇦 +974</option>
+            <option value="+968">🇴🇲 +968</option>
+            <option value="+967">🇾🇪 +967</option>
+            <option value="+962">🇯🇴 +962</option>
+            <option value="+963">🇸🇾 +963</option>
+            <option value="+964">🇮🇶 +964</option>
+            <option value="+961">🇱🇧 +961</option>
+            <option value="+20">🇪🇬 +20</option>
+            <option value="+212">🇲🇦 +212</option>
+            <option value="+213">🇩🇿 +213</option>
+            <option value="+216">🇹🇳 +216</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+7">🇷🇺 +7</option>
+            <option value="+90">🇹🇷 +90</option>
+            <option value="+92">🇵🇰 +92</option>
+            <option value="+91">🇮🇳 +91</option>
+          </select>
+          <input class="inp" id="phone-inp" type="tel" placeholder="5xxxxxxxx" style="direction:ltr;flex:1" inputmode="numeric" maxlength="15"/>
+        </div>
+
+        <button class="btn-gold" id="send-otp-btn" style="width:100%;margin-top:.8rem;padding:.85rem">
+          إرسال رمز التحقق
+        </button>
+        <div class="auth-msg" id="phone-msg"></div>
+        <div id="recaptcha-container"></div>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div id="step-otp" style="display:none">
+        <div style="text-align:center;margin-bottom:1.2rem">
+          <div style="font-size:2.5rem">📱</div>
+          <h2 style="margin-top:.5rem">أدخل رمز التحقق</h2>
+          <p id="otp-hint" style="margin-top:.3rem">تم إرسال رمز SMS</p>
+        </div>
+
+        <div class="otp-boxes" id="otp-boxes">
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="0"/>
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="1"/>
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="2"/>
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="3"/>
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="4"/>
+          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="5"/>
+        </div>
+
+        <button class="btn-gold" id="verify-btn" style="width:100%;margin-top:1rem;padding:.85rem">
+          تحقق ودخول ⚡
+        </button>
+        <div class="auth-msg" id="otp-msg"></div>
+
+        <button id="back-btn" style="background:none;border:none;color:#888;font-size:.9rem;cursor:pointer;margin-top:.8rem;width:100%;text-align:center">
+          ← تغيير الرقم
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -40,8 +103,7 @@
     <nav>
       <div class="nav-brand">⚡ AlphaCoin</div>
       <div class="nav-user">
-        <img id="nav-avatar" src="" alt="avatar"/>
-        <span id="nav-name"></span>
+        <span id="nav-name" style="font-size:.9rem"></span>
         <button class="btn-logout" id="btn-logout">خروج</button>
       </div>
     </nav>
@@ -117,7 +179,7 @@
     <div class="tab-content" id="tab-profile">
       <div class="profile-section">
         <div class="profile-card">
-          <img id="profile-avatar" src="" alt="avatar"/>
+          <div style="font-size:3.5rem;margin-bottom:.5rem">📱</div>
           <h3 id="profile-name"></h3>
           <div class="profile-email" id="profile-email"></div>
           <div class="profile-stats">
