@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>لوحة الأدمن | AlphaCoin</title>
+    <title>ÙÙØ­Ø© Ø§ÙØ£Ø¯ÙÙ | AlphaCoin</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-    /* ═══ Reset & Base ════════════════════════════════════════════ */
+    /* âââ Reset & Base ââââââââââââââââââââââââââââââââââââââââââââ */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --bg:#07070f;--bg2:#0d0d1a;--bg3:#12121e;--bg4:#1a1a2e;
@@ -20,7 +20,7 @@
     html{font-size:15px}
     body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;min-height:100vh;overflow-x:hidden}
 
-    /* ═══ Loading ════════════════════════════════════════════════ */
+    /* âââ Loading ââââââââââââââââââââââââââââââââââââââââââââââââ */
     #admin-loading{
       position:fixed;inset:0;z-index:9999;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -33,10 +33,10 @@
     }
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ═══ Layout ════════════════════════════════════════════════ */
+    /* âââ Layout ââââââââââââââââââââââââââââââââââââââââââââââââ */
     #admin-panel{display:none;min-height:100vh;flex-direction:column}
 
-    /* ═══ Top Bar ════════════════════════════════════════════════ */
+    /* âââ Top Bar ââââââââââââââââââââââââââââââââââââââââââââââââ */
     .admin-topbar{
       position:sticky;top:0;z-index:200;
       background:rgba(13,13,26,.96);backdrop-filter:blur(12px);
@@ -62,10 +62,10 @@
     .btn-sm.home{border-color:var(--border);color:var(--text2);text-decoration:none;display:inline-flex}
     .btn-sm.home:hover{border-color:var(--primary);color:var(--primary)}
 
-    /* ═══ Main content ════════════════════════════════════════════ */
+    /* âââ Main content ââââââââââââââââââââââââââââââââââââââââââââ */
     .admin-main{padding:1.2rem;max-width:1200px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:1.4rem}
 
-    /* ═══ Section card ════════════════════════════════════════════ */
+    /* âââ Section card ââââââââââââââââââââââââââââââââââââââââââââ */
     .section-card{
       background:var(--bg3);border:1px solid var(--border);
       border-radius:var(--r);padding:1.3rem;
@@ -76,7 +76,7 @@
       padding-bottom:.7rem;border-bottom:1px solid var(--border2);
     }
 
-    /* ═══ Dashboard Stats ════════════════════════════════════════ */
+    /* âââ Dashboard Stats ââââââââââââââââââââââââââââââââââââââââ */
     .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem}
     @media(min-width:600px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
     .stat-card{
@@ -102,7 +102,7 @@
     .stat-card.s4 .stat-val{color:var(--purple)}
     .stat-lbl{font-size:.75rem;color:var(--text2)}
 
-    /* ═══ Search & Toolbar ════════════════════════════════════════ */
+    /* âââ Search & Toolbar ââââââââââââââââââââââââââââââââââââââââ */
     .table-toolbar{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.9rem}
     .search-input{
       flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border);
@@ -133,7 +133,7 @@
     .btn-purple:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(124,58,237,.3)}
     .btn-action:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
-    /* ═══ Table ══════════════════════════════════════════════════ */
+    /* âââ Table ââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border2)}
     table{width:100%;border-collapse:collapse;font-size:.83rem}
     thead{background:var(--bg2)}
@@ -174,7 +174,7 @@
     .btn-icon.reward:hover{border-color:var(--green);color:var(--green)}
     .empty-row td{text-align:center;color:var(--text3);padding:2rem;font-size:.88rem}
 
-    /* ═══ Bulk reward ════════════════════════════════════════════ */
+    /* âââ Bulk reward ââââââââââââââââââââââââââââââââââââââââââââ */
     .bulk-row{display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap}
     .field-group{display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:160px}
     .field-lbl{font-size:.77rem;color:var(--text2)}
@@ -187,10 +187,10 @@
     .section-msg{margin-top:.6rem;font-size:.85rem;min-height:1.2em}
     .ok{color:var(--green)}.err{color:var(--red)}.info{color:var(--text2)}
 
-    /* ═══ Chart ════════════════════════════════════════════════== */
+    /* âââ Chart ââââââââââââââââââââââââââââââââââââââââââââââââ== */
     .chart-wrap{position:relative;height:200px;margin-top:.5rem}
 
-    /* ═══ Modal ═════════════════════════════════════════════════ */
+    /* âââ Modal âââââââââââââââââââââââââââââââââââââââââââââââââ */
     .modal-overlay{
       position:fixed;inset:0;z-index:500;
       background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
@@ -222,14 +222,14 @@
     .modal-user-info strong{color:var(--text)}
     .modal-footer{display:flex;gap:.7rem;margin-top:1rem;flex-wrap:wrap}
 
-    /* ═══ Confirm modal ════════════════════════════════════════== */
+    /* âââ Confirm modal ââââââââââââââââââââââââââââââââââââââââ== */
     .confirm-text{
       text-align:center;color:var(--text2);font-size:.9rem;
       padding:.5rem;line-height:1.6;
     }
     .confirm-text strong{color:var(--red)}
 
-    /* ═══ Toast ══════════════════════════════════════════════════ */
+    /* âââ Toast ââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .toast{
       position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
       background:var(--bg4);color:var(--text);padding:.7rem 1.4rem;
@@ -241,7 +241,7 @@
     .toast.ok{border-left:3px solid var(--green)}
     .toast.err{border-left:3px solid var(--red)}
 
-    /* ═══ Responsive ═════════════════════════════════════════════ */
+    /* âââ Responsive âââââââââââââââââââââââââââââââââââââââââââââ */
     @media(max-width:500px){
       .admin-main{padding:.8rem}
       .topbar-brand span{display:none}
@@ -255,7 +255,7 @@
   <!-- Loading -->
   <div id="admin-loading">
     <div class="loading-spinner"></div>
-    <span>جار التحقق من الصلاحيات…</span>
+    <span>Ø¬Ø§Ø± Ø§ÙØªØ­ÙÙ ÙÙ Ø§ÙØµÙØ§Ø­ÙØ§Øªâ¦</span>
   </div>
 
   <!-- Admin Panel -->
@@ -264,12 +264,12 @@
     <!-- Top Bar -->
     <div class="admin-topbar">
       <div class="topbar-brand">
-        <span>⚡</span><span>AlphaCoin — لوحة الأدمن</span>
+        <span>â¡</span><span>AlphaCoin â ÙÙØ­Ø© Ø§ÙØ£Ø¯ÙÙ</span>
       </div>
       <div class="topbar-right">
         <span class="admin-email" id="admin-email-label"></span>
-        <a href="/" class="btn-sm home">← الموقع</a>
-        <button class="btn-sm" id="admin-logout-btn">تسجيل خروج</button>
+        <a href="/" class="btn-sm home">â Ø§ÙÙÙÙØ¹</a>
+        <button class="btn-sm" id="admin-logout-btn">ØªØ³Ø¬ÙÙ Ø®Ø±ÙØ¬</button>
       </div>
     </div>
 
@@ -277,34 +277,34 @@
 
       <!-- Dashboard Stats -->
       <div class="section-card">
-        <div class="section-title">📊 لوحة المعلومات</div>
+        <div class="section-title">ð ÙÙØ­Ø© Ø§ÙÙØ¹ÙÙÙØ§Øª</div>
         <div class="stats-grid">
           <div class="stat-card s1">
-            <div class="stat-icon">👥</div>
-            <div class="stat-val" id="stat-users">—</div>
-            <div class="stat-lbl">إجمالي المستخدمين</div>
+            <div class="stat-icon">ð¥</div>
+            <div class="stat-val" id="stat-users">â</div>
+            <div class="stat-lbl">Ø¥Ø¬ÙØ§ÙÙ Ø§ÙÙØ³ØªØ®Ø¯ÙÙÙ</div>
           </div>
           <div class="stat-card s2">
-            <div class="stat-icon">⛏</div>
-            <div class="stat-val" id="stat-total-mined">—</div>
-            <div class="stat-lbl">إجمالي العملات (α)</div>
+            <div class="stat-icon">â</div>
+            <div class="stat-val" id="stat-total-mined">â</div>
+            <div class="stat-lbl">Ø¥Ø¬ÙØ§ÙÙ Ø§ÙØ¹ÙÙØ§Øª (Î±)</div>
           </div>
           <div class="stat-card s3">
-            <div class="stat-icon">🎟</div>
-            <div class="stat-val" id="stat-coupons">—</div>
-            <div class="stat-lbl">قسائم نشطة</div>
+            <div class="stat-icon">ð</div>
+            <div class="stat-val" id="stat-coupons">â</div>
+            <div class="stat-lbl">ÙØ³Ø§Ø¦Ù ÙØ´Ø·Ø©</div>
           </div>
           <div class="stat-card s4">
-            <div class="stat-icon">📅</div>
-            <div class="stat-val" id="stat-new-today">—</div>
-            <div class="stat-lbl">مستخدمون جدد اليوم</div>
+            <div class="stat-icon">ð</div>
+            <div class="stat-val" id="stat-new-today">â</div>
+            <div class="stat-lbl">ÙØ³ØªØ®Ø¯ÙÙÙ Ø¬Ø¯Ø¯ Ø§ÙÙÙÙ</div>
           </div>
         </div>
       </div>
 
       <!-- Chart -->
       <div class="section-card">
-        <div class="section-title">📈 المستخدمون الجدد — آخر 7 أيام</div>
+        <div class="section-title">ð Ø§ÙÙØ³ØªØ®Ø¯ÙÙÙ Ø§ÙØ¬Ø¯Ø¯ â Ø¢Ø®Ø± 7 Ø£ÙØ§Ù</div>
         <div class="chart-wrap">
           <canvas id="users-chart"></canvas>
         </div>
@@ -312,35 +312,35 @@
 
       <!-- Users Table -->
       <div class="section-card">
-        <div class="section-title">👥 إدارة المستخدمين</div>
+        <div class="section-title">ð¥ Ø¥Ø¯Ø§Ø±Ø© Ø§ÙÙØ³ØªØ®Ø¯ÙÙÙ</div>
 
         <div class="table-toolbar">
-          <input class="search-input" id="user-search" placeholder="🔍 بحث بالاسم أو البريد…" autocomplete="off"/>
+          <input class="search-input" id="user-search" placeholder="ð Ø¨Ø­Ø« Ø¨Ø§ÙØ§Ø³Ù Ø£Ù Ø§ÙØ¨Ø±ÙØ¯â¦" autocomplete="off"/>
           <select class="sort-select" id="user-sort">
-            <option value="createdAt-desc">الأحدث أولاً</option>
-            <option value="createdAt-asc">الأقدم أولاً</option>
-            <option value="balance-desc">أعلى رصيد</option>
-            <option value="balance-asc">أقل رصيد</option>
-            <option value="totalMined-desc">أكثر تعديناً</option>
+            <option value="createdAt-desc">Ø§ÙØ£Ø­Ø¯Ø« Ø£ÙÙØ§Ù</option>
+            <option value="createdAt-asc">Ø§ÙØ£ÙØ¯Ù Ø£ÙÙØ§Ù</option>
+            <option value="balance-desc">Ø£Ø¹ÙÙ Ø±ØµÙØ¯</option>
+            <option value="balance-asc">Ø£ÙÙ Ø±ØµÙØ¯</option>
+            <option value="totalMined-desc">Ø£ÙØ«Ø± ØªØ¹Ø¯ÙÙØ§Ù</option>
           </select>
-          <button class="btn-action btn-green" id="refresh-users-btn">🔄 تحديث</button>
+          <button class="btn-action btn-green" id="refresh-users-btn">ð ØªØ­Ø¯ÙØ«</button>
         </div>
 
         <div class="table-wrap">
           <table id="users-table">
             <thead>
               <tr>
-                <th>المستخدم</th>
-                <th>الرصيد (α)</th>
-                <th>التعدين الكلي</th>
-                <th>القوة</th>
-                <th>المدة</th>
-                <th>آخر جني</th>
-                <th>إجراءات</th>
+                <th>Ø§ÙÙØ³ØªØ®Ø¯Ù</th>
+                <th>Ø§ÙØ±ØµÙØ¯ (Î±)</th>
+                <th>Ø§ÙØªØ¹Ø¯ÙÙ Ø§ÙÙÙÙ</th>
+                <th>Ø§ÙÙÙØ©</th>
+                <th>Ø§ÙÙØ¯Ø©</th>
+                <th>Ø¢Ø®Ø± Ø¬ÙÙ</th>
+                <th>Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª</th>
               </tr>
             </thead>
             <tbody id="users-tbody">
-              <tr class="empty-row"><td colspan="7">جار التحميل…</td></tr>
+              <tr class="empty-row"><td colspan="7">Ø¬Ø§Ø± Ø§ÙØªØ­ÙÙÙâ¦</td></tr>
             </tbody>
           </table>
         </div>
@@ -348,33 +348,33 @@
 
       <!-- Bulk Reward -->
       <div class="section-card">
-        <div class="section-title">🎁 مكافأة جماعية لجميع المستخدمين</div>
+        <div class="section-title">ð ÙÙØ§ÙØ£Ø© Ø¬ÙØ§Ø¹ÙØ© ÙØ¬ÙÙØ¹ Ø§ÙÙØ³ØªØ®Ø¯ÙÙÙ</div>
         <div class="bulk-row">
           <div class="field-group">
-            <label class="field-lbl">المكافأة (α) لكل مستخدم</label>
-            <input class="inp" id="bulk-reward-val" type="number" min="0.000001" step="0.001" placeholder="مثال: 5"/>
+            <label class="field-lbl">Ø§ÙÙÙØ§ÙØ£Ø© (Î±) ÙÙÙ ÙØ³ØªØ®Ø¯Ù</label>
+            <input class="inp" id="bulk-reward-val" type="number" min="0.000001" step="0.001" placeholder="ÙØ«Ø§Ù: 5"/>
           </div>
           <div class="field-group">
-            <label class="field-lbl">سبب (اختياري)</label>
-            <input class="inp" id="bulk-reward-reason" type="text" placeholder="مثال: مكافأة العيد…"/>
+            <label class="field-lbl">Ø³Ø¨Ø¨ (Ø§Ø®ØªÙØ§Ø±Ù)</label>
+            <input class="inp" id="bulk-reward-reason" type="text" placeholder="ÙØ«Ø§Ù: ÙÙØ§ÙØ£Ø© Ø§ÙØ¹ÙØ¯â¦"/>
           </div>
-          <button class="btn-action btn-purple" id="bulk-reward-btn">🎁 تطبيق على الجميع</button>
+          <button class="btn-action btn-purple" id="bulk-reward-btn">ð ØªØ·Ø¨ÙÙ Ø¹ÙÙ Ø§ÙØ¬ÙÙØ¹</button>
         </div>
         <div class="section-msg" id="bulk-msg"></div>
       </div>
 
       <!-- Coupons -->
       <div class="section-card">
-        <div class="section-title">🎟 إدارة القسائم</div>
+        <div class="section-title">ð Ø¥Ø¯Ø§Ø±Ø© Ø§ÙÙØ³Ø§Ø¦Ù</div>
 
         <div class="table-toolbar">
           <div class="field-group" style="flex:1;min-width:130px">
-            <input class="inp" id="new-coupon-code" placeholder="كود مخصص (أو اتركه فارغاً للعشوائي)" style="text-transform:uppercase"/>
+            <input class="inp" id="new-coupon-code" placeholder="ÙÙØ¯ ÙØ®ØµØµ (Ø£Ù Ø§ØªØ±ÙÙ ÙØ§Ø±ØºØ§Ù ÙÙØ¹Ø´ÙØ§Ø¦Ù)" style="text-transform:uppercase"/>
           </div>
           <div class="field-group" style="flex:0 0 130px">
-            <input class="inp" id="new-coupon-reward" type="number" min="0.001" step="0.001" placeholder="المكافأة α"/>
+            <input class="inp" id="new-coupon-reward" type="number" min="0.001" step="0.001" placeholder="Ø§ÙÙÙØ§ÙØ£Ø© Î±"/>
           </div>
-          <button class="btn-action btn-gold" id="create-coupon-btn">➕ إنشاء</button>
+          <button class="btn-action btn-gold" id="create-coupon-btn">â Ø¥ÙØ´Ø§Ø¡</button>
         </div>
         <div class="section-msg" id="coupon-create-msg"></div>
 
@@ -382,16 +382,16 @@
           <table>
             <thead>
               <tr>
-                <th>الكود</th>
-                <th>المكافأة</th>
-                <th>الحالة</th>
-                <th>الاستخدامات</th>
-                <th>تاريخ الإنشاء</th>
-                <th>إجراء</th>
+                <th>Ø§ÙÙÙØ¯</th>
+                <th>Ø§ÙÙÙØ§ÙØ£Ø©</th>
+                <th>Ø§ÙØ­Ø§ÙØ©</th>
+                <th>Ø§ÙØ§Ø³ØªØ®Ø¯Ø§ÙØ§Øª</th>
+                <th>ØªØ§Ø±ÙØ® Ø§ÙØ¥ÙØ´Ø§Ø¡</th>
+                <th>Ø¥Ø¬Ø±Ø§Ø¡</th>
               </tr>
             </thead>
             <tbody id="coupons-tbody">
-              <tr class="empty-row"><td colspan="6">جار التحميل…</td></tr>
+              <tr class="empty-row"><td colspan="6">Ø¬Ø§Ø± Ø§ÙØªØ­ÙÙÙâ¦</td></tr>
             </tbody>
           </table>
         </div>
@@ -400,90 +400,159 @@
     </div><!-- /admin-main -->
   </div><!-- /admin-panel -->
 
-  <!-- ═══ Edit User Modal ════════════════════════════════════════ -->
+  <!-- âââ Edit User Modal ââââââââââââââââââââââââââââââââââââââââ -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">✏️ تعديل المستخدم</div>
-        <button class="modal-close" data-close="edit-modal">✕</button>
+        <div class="modal-title">âï¸ ØªØ¹Ø¯ÙÙ Ø§ÙÙØ³ØªØ®Ø¯Ù</div>
+        <button class="modal-close" data-close="edit-modal">â</button>
       </div>
       <div class="modal-body">
-        <div class="modal-user-info" id="edit-user-info">—</div>
+        <div class="modal-user-info" id="edit-user-info">â</div>
         <div class="field-group">
-          <label class="field-lbl">الرصيد (α)</label>
+          <label class="field-lbl">Ø§ÙØ±ØµÙØ¯ (Î±)</label>
           <input class="inp" id="edit-balance" type="number" step="0.000001" min="0"/>
         </div>
         <div class="field-group">
-          <label class="field-lbl">إجمالي التعدين (α)</label>
+          <label class="field-lbl">Ø¥Ø¬ÙØ§ÙÙ Ø§ÙØªØ¹Ø¯ÙÙ (Î±)</label>
           <input class="inp" id="edit-total" type="number" step="0.000001" min="0"/>
         </div>
         <div class="field-group">
-          <label class="field-lbl">قوة التعدين (α/ساعة)</label>
+          <label class="field-lbl">ÙÙØ© Ø§ÙØªØ¹Ø¯ÙÙ (Î±/Ø³Ø§Ø¹Ø©)</label>
           <input class="inp" id="edit-power" type="number" step="1" min="1"/>
         </div>
         <div class="field-group">
-          <label class="field-lbl">مستوى القوة (1-5)</label>
+          <label class="field-lbl">ÙØ³ØªÙÙ Ø§ÙÙÙØ© (1-5)</label>
           <input class="inp" id="edit-power-level" type="number" step="1" min="1" max="5"/>
         </div>
         <div class="field-group">
-          <label class="field-lbl">المدة القصوى (ساعات)</label>
+          <label class="field-lbl">Ø§ÙÙØ¯Ø© Ø§ÙÙØµÙÙ (Ø³Ø§Ø¹Ø§Øª)</label>
           <input class="inp" id="edit-duration" type="number" step="1" min="1"/>
         </div>
         <div class="field-group">
-          <label class="field-lbl">مستوى المدة (1-4)</label>
+          <label class="field-lbl">ÙØ³ØªÙÙ Ø§ÙÙØ¯Ø© (1-4)</label>
           <input class="inp" id="edit-duration-level" type="number" step="1" min="1" max="4"/>
         </div>
         <div class="section-msg" id="edit-user-msg"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn-action btn-gold" id="save-edit-btn" style="flex:1">💾 حفظ</button>
-        <button class="btn-action btn-purple" id="free-upgrade-edit-btn" style="flex:1">🎁 ترقية مجانية</button>
-        <button class="btn-action" id="reset-mining-btn" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2);flex:1">🔄 إعادة ضبط التعدين</button>
+        <button class="btn-action btn-gold" id="save-edit-btn" style="flex:1">ð¾ Ø­ÙØ¸</button>
+        <button class="btn-action btn-purple" id="free-upgrade-edit-btn" style="flex:1">ð ØªØ±ÙÙØ© ÙØ¬Ø§ÙÙØ©</button>
+        <button class="btn-action" id="reset-mining-btn" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2);flex:1">ð Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§ÙØªØ¹Ø¯ÙÙ</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══ Quick Reward Modal ════════════════════════════════════ -->
+  <!-- âââ Quick Reward Modal ââââââââââââââââââââââââââââââââââââ -->
   <div class="modal-overlay" id="reward-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">🎁 مكافأة سريعة</div>
-        <button class="modal-close" data-close="reward-modal">✕</button>
+        <div class="modal-title">ð ÙÙØ§ÙØ£Ø© Ø³Ø±ÙØ¹Ø©</div>
+        <button class="modal-close" data-close="reward-modal">â</button>
       </div>
       <div class="modal-body">
-        <div class="modal-user-info" id="reward-user-info">—</div>
+        <div class="modal-user-info" id="reward-user-info">â</div>
         <div class="field-group">
-          <label class="field-lbl">المبلغ المُضاف (α)</label>
-          <input class="inp" id="reward-amount" type="number" step="0.000001" min="0.000001" placeholder="مثال: 10"/>
+          <label class="field-lbl">Ø§ÙÙØ¨ÙØº Ø§ÙÙÙØ¶Ø§Ù (Î±)</label>
+          <input class="inp" id="reward-amount" type="number" step="0.000001" min="0.000001" placeholder="ÙØ«Ø§Ù: 10"/>
         </div>
         <div class="section-msg" id="reward-msg"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn-action btn-green" id="confirm-reward-btn" style="flex:1">✅ تطبيق المكافأة</button>
-        <button class="btn-action" data-close="reward-modal" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2)">إلغاء</button>
+        <button class="btn-action btn-green" id="confirm-reward-btn" style="flex:1">â ØªØ·Ø¨ÙÙ Ø§ÙÙÙØ§ÙØ£Ø©</button>
+        <button class="btn-action" data-close="reward-modal" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2)">Ø¥ÙØºØ§Ø¡</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══ Confirm Delete Modal ══════════════════════════════════ -->
+  <!-- âââ Confirm Delete Modal ââââââââââââââââââââââââââââââââââ -->
   <div class="modal-overlay" id="delete-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title" style="color:var(--red)">⚠️ تأكيد الحذف</div>
-        <button class="modal-close" data-close="delete-modal">✕</button>
+        <div class="modal-title" style="color:var(--red)">â ï¸ ØªØ£ÙÙØ¯ Ø§ÙØ­Ø°Ù</div>
+        <button class="modal-close" data-close="delete-modal">â</button>
       </div>
       <div class="modal-body">
         <div class="confirm-text" id="delete-confirm-text">
-          هل أنت متأكد من حذف هذا المستخدم؟<br/>
-          <strong>لا يمكن التراجع عن هذه العملية.</strong>
+          ÙÙ Ø£ÙØª ÙØªØ£ÙØ¯ ÙÙ Ø­Ø°Ù ÙØ°Ø§ Ø§ÙÙØ³ØªØ®Ø¯ÙØ<br/>
+          <strong>ÙØ§ ÙÙÙÙ Ø§ÙØªØ±Ø§Ø¬Ø¹ Ø¹Ù ÙØ°Ù Ø§ÙØ¹ÙÙÙØ©.</strong>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-action btn-red" id="confirm-delete-btn" style="flex:1">🗑️ حذف نهائياً</button>
-        <button class="btn-action" data-close="delete-modal" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2);flex:1">إلغاء</button>
+        <button class="btn-action btn-red" id="confirm-delete-btn" style="flex:1">ðï¸ Ø­Ø°Ù ÙÙØ§Ø¦ÙØ§Ù</button>
+        <button class="btn-action" data-close="delete-modal" style="background:var(--bg4);border:1px solid var(--border);color:var(--text2);flex:1">Ø¥ÙØºØ§Ø¡</button>
       </div>
     </div>
   </div>
+
+  
+      <!-- ═══ Price Cards ════════════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-title">🃏 إدارة بطاقات العروض</div>
+
+        <!-- Create card form -->
+        <div class="card-create-form" id="card-create-form">
+          <div class="card-form-grid">
+            <div class="field-group" style="grid-column:1/-1">
+              <label class="field-lbl">عنوان البطاقة</label>
+              <input class="inp" id="card-title" placeholder="مثال: عرض نهاية الأسبوع 🎉" maxlength="60"/>
+            </div>
+            <div class="field-group" style="grid-column:1/-1">
+              <label class="field-lbl">وصف البطاقة</label>
+              <input class="inp" id="card-desc" placeholder="مثال: احصل على مكافأة خاصة لفترة محدودة" maxlength="120"/>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">المكافأة (α)</label>
+              <input class="inp" id="card-reward" type="number" min="0.000001" step="0.001" placeholder="10"/>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">أيقونة البطاقة (emoji)</label>
+              <input class="inp" id="card-icon" placeholder="🎁" maxlength="4" style="font-size:1.4rem;text-align:center"/>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">الحد الأقصى للاستخدام (0 = غير محدود)</label>
+              <input class="inp" id="card-max-uses" type="number" min="0" step="1" placeholder="0" value="0"/>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">لون البطاقة</label>
+              <select class="inp" id="card-color">
+                <option value="gold">🟡 ذهبي</option>
+                <option value="blue">🔵 أزرق</option>
+                <option value="green">🟢 أخضر</option>
+                <option value="purple">🟣 بنفسجي</option>
+                <option value="red">🔴 أحمر</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">تاريخ ووقت البداية</label>
+              <input class="inp" id="card-start" type="datetime-local"/>
+            </div>
+            <div class="field-group">
+              <label class="field-lbl">تاريخ ووقت الانتهاء</label>
+              <input class="inp" id="card-end" type="datetime-local"/>
+            </div>
+          </div>
+          <div style="margin-top:.9rem;display:flex;gap:.7rem;flex-wrap:wrap">
+            <button class="btn-action btn-gold" id="create-card-btn">➕ إنشاء البطاقة</button>
+            <button class="btn-action" id="preview-card-btn" style="background:var(--bg2);border:1px solid var(--border);color:var(--text2)">👁 معاينة</button>
+          </div>
+          <div class="section-msg" id="card-create-msg"></div>
+        </div>
+
+        <!-- Card Preview -->
+        <div id="card-preview-wrap" style="display:none;margin:1rem 0">
+          <div class="field-lbl" style="margin-bottom:.5rem">معاينة البطاقة:</div>
+          <div id="card-preview"></div>
+        </div>
+
+        <!-- Cards list -->
+        <div style="margin-top:1.2rem">
+          <div class="section-title" style="font-size:.85rem;border:none;padding:0;margin-bottom:.7rem;color:var(--text2)">البطاقات المنشأة</div>
+          <div id="cards-list">
+            <div style="color:var(--text3);text-align:center;padding:1.5rem;font-size:.85rem">لا توجد بطاقات بعد</div>
+          </div>
+        </div>
+      </div>
 
   <!-- Toast -->
   <div class="toast" id="admin-toast"></div>
