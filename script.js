@@ -34,9 +34,25 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   const toastEl        = document.getElementById("toast");
   const adminBtnWrap   = document.getElementById("admin-btn-wrap");
 
+  // ── VISIBLE DEBUG PANEL ────────────────────────────────────────
+  const dbg = document.createElement("div");
+  dbg.id = "dbg-panel";
+  dbg.style.cssText = "position:fixed;top:0;left:0;right:0;background:#1a0a0a;color:#ff0;font-size:12px;padding:6px 10px;z-index:9999;max-height:160px;overflow-y:auto;border-bottom:2px solid red;direction:ltr;font-family:monospace";
+  document.body.prepend(dbg);
+
+  function dbgLog(msg) {
+    const line = document.createElement("div");
+    line.textContent = new Date().toISOString().slice(11,19) + " " + msg;
+    dbg.insertBefore(line, dbg.firstChild);
+    console.log("[DBG]", msg);
+  }
+
+  dbgLog("script.js loaded");
+
   // ── Particles ─────────────────────────────────────────────────
   (function () {
     const c = document.getElementById("particles");
+    if (!c) return;
     for (let i = 0; i < 25; i++) {
       const p = document.createElement("div");
       p.className = "particle";
@@ -74,15 +90,19 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   googleProvider.setCustomParameters({ prompt: "select_account" });
 
   // ── Auth state ─────────────────────────────────────────────────
+  dbgLog("registering onAuthStateChanged...");
   onAuthStateChanged(auth, async user => {
+    dbgLog("onAuthStateChanged fired: user=" + (user ? user.email : "NULL"));
     loadingEl.style.display = "none";
     if (user) {
       currentUser = user;
+      dbgLog("showing game for: " + user.email);
       authScreen.style.display    = "none";
       gameContainer.style.display = "flex";
       await ensureUserRecord(user);
       listenUserData(user.uid);
     } else {
+      dbgLog("NO USER — showing auth screen");
       currentUser = null;
       userData    = null;
       gameContainer.style.display = "none";
@@ -91,20 +111,24 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     }
   });
 
-  // ── Google Login (popup on ALL devices) ───────────────────────
+  // ── Google Login ───────────────────────────────────────────────
   googleLoginBtn.addEventListener("click", async () => {
+    dbgLog("login button clicked");
     googleLoginBtn.disabled    = true;
     googleLoginBtn.textContent = "جار الدخول…";
     authErr.textContent = "";
     try {
-      // Force localStorage persistence so auth survives page refreshes
+      dbgLog("calling setPersistence...");
       await setPersistence(auth, browserLocalPersistence);
-      // Popup works on Android Chrome (opens as Chrome Custom Tab on mobile)
-      await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle showing the game
+      dbgLog("calling signInWithPopup...");
+      const result = await signInWithPopup(auth, googleProvider);
+      dbgLog("signInWithPopup SUCCESS: " + result.user.email);
+      // onAuthStateChanged will now fire with the user
     } catch (e) {
-      console.error("Login error:", e.code, e.message);
+      dbgLog("signInWithPopup ERROR: " + e.code + " — " + e.message);
       authErr.textContent = getErrMsg(e);
+      authErr.style.color = "red";
+      authErr.style.fontSize = "14px";
       resetLoginBtn();
     }
   });
@@ -117,34 +141,40 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
 
   function getErrMsg(e) {
     return {
-      "auth/popup-closed-by-user":    "أُغلقت نافذة الدخول — حاول مرة أخرى",
-      "auth/popup-blocked":           "المتصفح حجب النافذة — اسمح بالنوافذ المنبثقة للموقع",
+      "auth/popup-closed-by-user":    "أُغلقت نافذة الدخول",
+      "auth/popup-blocked":           "المتصفح حجب النافذة",
       "auth/cancelled-popup-request": "تم إلغاء الطلب",
-      "auth/network-request-failed":  "خطأ في الاتصال بالإنترنت",
-      "auth/user-disabled":           "هذا الحساب معطّل",
-      "auth/internal-error":          "خطأ في إعدادات Firebase — راجع Google Cloud Console",
-    }[e.code] || ("خطأ: " + (e.message || e.code));
+      "auth/network-request-failed":  "خطأ في الاتصال",
+      "auth/user-disabled":           "الحساب معطّل",
+      "auth/internal-error":          "خطأ Firebase داخلي",
+      "auth/unauthorized-domain":     "الدومين غير مصرح في Firebase",
+    }[e.code] || (e.code + ": " + e.message);
   }
 
   logoutBtn.addEventListener("click", () => signOut(auth));
 
   // ── Ensure user record ─────────────────────────────────────────
   async function ensureUserRecord(user) {
-    const snap = await get(ref(db, `users/${user.uid}`));
-    if (!snap.exists()) {
-      const raw   = user.displayName || user.email || user.uid;
-      const uname = raw.split("@")[0].replace(/[^a-z0-9_]/gi, "_").toLowerCase().slice(0, 20);
-      await set(ref(db, `users/${user.uid}`), {
-        username:       uname,
-        email:          user.email    || "",
-        photoURL:       user.photoURL || "",
-        phone:          "",
-        balance:        0,
-        totalMined:     0,
-        lastMineDate:   "",
-        dailyMineCount: 0,
-        createdAt:      Date.now()
-      });
+    dbgLog("ensureUserRecord for " + user.uid.slice(0,8));
+    try {
+      const snap = await get(ref(db, `users/${user.uid}`));
+      if (!snap.exists()) {
+        dbgLog("creating new user record...");
+        const raw   = user.displayName || user.email || user.uid;
+        const uname = raw.split("@")[0].replace(/[^a-z0-9_]/gi, "_").toLowerCase().slice(0, 20);
+        await set(ref(db, `users/${user.uid}`), {
+          username: uname, email: user.email || "",
+          photoURL: user.photoURL || "", phone: "",
+          balance: 0, totalMined: 0,
+          lastMineDate: "", dailyMineCount: 0,
+          createdAt: Date.now()
+        });
+        dbgLog("user record created OK");
+      } else {
+        dbgLog("user record exists OK");
+      }
+    } catch(e) {
+      dbgLog("ensureUserRecord ERROR: " + e.message);
     }
   }
 
@@ -156,7 +186,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
       updateBalanceUI();
       userNameEl.textContent = userData.username || "";
       if (userData.photoURL) {
-        userPhotoEl.src           = userData.photoURL;
+        userPhotoEl.src = userData.photoURL;
         userPhotoEl.style.display = "block";
       }
       if (adminBtnWrap)
@@ -166,7 +196,6 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     });
   }
 
-  // ── updateBalanceUI(newBalance?) ───────────────────────────────
   function updateBalanceUI(newBalance) {
     if (!userData) return;
     if (newBalance !== undefined) userData.balance = newBalance;
@@ -193,7 +222,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     const todayKey = todayStr();
     const sameDay  = userData.lastMineDate === todayKey;
     const dailyC   = sameDay ? (userData.dailyMineCount || 0) : 0;
-    if (dailyC >= 50) { showToast("وصلت للحد اليومي (50 عملية)", "err"); return; }
+    if (dailyC >= 50) { showToast("وصلت للحد اليومي", "err"); return; }
     const reward   = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
     const newBal   = parseFloat(((userData.balance    || 0) + reward).toFixed(4));
     const newTotal = parseFloat(((userData.totalMined || 0) + reward).toFixed(4));
@@ -212,7 +241,7 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
 
   function spawnReward(text) {
     const el = document.createElement("div");
-    el.className   = "float-reward";
+    el.className = "float-reward";
     el.textContent = text;
     const r = mineBtn.getBoundingClientRect();
     el.style.left = r.left + r.width / 2 - 55 + "px";
@@ -233,17 +262,16 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     setCouponMsg("جار التحقق…", "");
     try {
       const cpSnap = await get(ref(db, `coupons/${code}`));
-      if (!cpSnap.exists())  { setCouponMsg("القسيمة غير موجودة", "err"); return; }
+      if (!cpSnap.exists())  { setCouponMsg("غير موجودة", "err"); return; }
       const cp = cpSnap.val();
-      if (!cp.isActive)      { setCouponMsg("القسيمة غير نشطة", "err"); return; }
+      if (!cp.isActive)      { setCouponMsg("غير نشطة", "err"); return; }
       const usedBy = cp.usedBy && typeof cp.usedBy === "object" ? cp.usedBy : {};
-      if (usedBy[currentUser.uid]) { setCouponMsg("استخدمت هذه القسيمة من قبل", "err"); return; }
+      if (usedBy[currentUser.uid]) { setCouponMsg("استخدمتها مسبقاً", "err"); return; }
       const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
       await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
       await update(ref(db, `coupons/${code}/usedBy`), { [currentUser.uid]: true });
       setCouponMsg(`تم! +α${cp.rewardAmount} 🎉`, "ok");
       couponInp.value = "";
-      showToast(`+α${cp.rewardAmount} تم استبدال القسيمة!`);
     } catch (e) {
       setCouponMsg("خطأ: " + e.message, "err");
     } finally {
@@ -256,58 +284,44 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
     couponMsgEl.className   = "coupon-msg " + t;
   }
 
-  // ── loadLeaderboard() ──────────────────────────────────────────
   async function loadLeaderboard() {
     lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>`;
     try {
       const snap = await get(ref(db, "users"));
-      if (!snap.exists()) {
-        lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">لا يوجد مستخدمون بعد</td></tr>`;
-        return;
-      }
+      if (!snap.exists()) { lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:1rem;color:#555">لا يوجد مستخدمون</td></tr>`; return; }
       const users = [];
       snap.forEach(c => users.push({ uid: c.key, ...c.val() }));
       users.sort((a, b) => (b.balance || 0) - (a.balance || 0));
       lbBody.innerHTML = users.map((u, i) => {
-        const rank  = i + 1;
+        const rank = i + 1;
         const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
-        const cls   = rank <= 3 ? `r${rank}` : "";
         const isYou = currentUser && u.uid === currentUser.uid;
-        return `<tr class="${isYou ? "lb-you" : ""}">
-          <td><span class="lb-rank ${cls}">${medal}</span></td>
-          <td>⚡ ${u.username || "مجهول"}${isYou ? " <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</td>
-          <td><span class="lb-balance">α${(u.balance || 0).toFixed(4)}</span></td>
-          <td style="color:#888">α${(u.totalMined || 0).toFixed(4)}</td>
-        </tr>`;
+        return `<tr class="${isYou?"lb-you":""}"><td><span class="lb-rank ${rank<=3?"r"+rank:""}">${medal}</span></td>
+          <td>⚡ ${u.username||"مجهول"}${isYou?" <span style='color:var(--gold);font-size:.75rem'>(أنت)</span>":""}</td>
+          <td><span class="lb-balance">α${(u.balance||0).toFixed(4)}</span></td>
+          <td style="color:#888">α${(u.totalMined||0).toFixed(4)}</td></tr>`;
       }).join("");
-    } catch (e) {
-      lbBody.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center;padding:1rem">${e.message}</td></tr>`;
-    }
+    } catch (e) { lbBody.innerHTML = `<tr><td colspan="4" style="color:red;text-align:center">${e.message}</td></tr>`; }
   }
 
-  // ── loadProfile() ──────────────────────────────────────────────
   async function loadProfile() {
     if (!currentUser || !userData) return;
-    const photoEl    = document.getElementById("profile-photo");
+    const photoEl = document.getElementById("profile-photo");
     const fallbackEl = document.getElementById("profile-avatar-fallback");
-    if (userData.photoURL) {
-      photoEl.src = userData.photoURL; photoEl.style.display = "block";
-      fallbackEl.style.display = "none";
-    }
-    document.getElementById("profile-name").textContent    = userData.username || currentUser.displayName || "";
-    document.getElementById("profile-email").textContent   = userData.email    || currentUser.email       || "";
-    document.getElementById("profile-balance").textContent = (userData.balance    || 0).toFixed(4);
-    document.getElementById("profile-total").textContent   = (userData.totalMined || 0).toFixed(4);
-    const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount || 0) : 0;
-    document.getElementById("profile-daily").textContent   = `${count}/50`;
+    if (userData.photoURL) { photoEl.src = userData.photoURL; photoEl.style.display = "block"; fallbackEl.style.display = "none"; }
+    document.getElementById("profile-name").textContent    = userData.username || "";
+    document.getElementById("profile-email").textContent   = userData.email || "";
+    document.getElementById("profile-balance").textContent = (userData.balance||0).toFixed(4);
+    document.getElementById("profile-total").textContent   = (userData.totalMined||0).toFixed(4);
+    const count = userData.lastMineDate === todayStr() ? (userData.dailyMineCount||0) : 0;
+    document.getElementById("profile-daily").textContent = `${count}/50`;
     try {
       const snap = await get(ref(db, "users"));
       if (snap.exists()) {
-        const arr = [];
-        snap.forEach(c => arr.push({ uid: c.key, bal: c.val().balance || 0 }));
-        arr.sort((a, b) => b.bal - a.bal);
+        const arr = []; snap.forEach(c => arr.push({ uid: c.key, bal: c.val().balance||0 }));
+        arr.sort((a,b) => b.bal - a.bal);
         const idx = arr.findIndex(u => u.uid === currentUser.uid);
-        document.getElementById("profile-rank").textContent = idx >= 0 ? `#${idx + 1}` : "-";
+        document.getElementById("profile-rank").textContent = idx >= 0 ? `#${idx+1}` : "-";
       }
     } catch {}
   }
