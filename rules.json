@@ -1,30 +1,45 @@
 {
-    "rules": {
-      "users": {
-        "$uid": {
-          ".read": "auth != null && auth.uid === $uid",
-          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
-          ".validate": "newData.hasChildren(['username','balance'])",
-          "balance": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 || auth.token.email === 'aialskrani@gmail.com'"
-          },
-          "dailyMineCount": {
-            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 50 || auth.token.email === 'aialskrani@gmail.com'"
-          }
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
+        ".validate": "newData.hasChildren(['username','balance'])",
+        "balance": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 || auth.token.email === 'aialskrani@gmail.com'"
         },
-        ".read": "auth != null"
+        "miningPower": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "maxMiningDuration": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "miningPowerLevel": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "miningDurationLevel": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "miningStartTime": {
+          ".validate": "newData.isNumber() || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "lastClaimTime": {
+          ".validate": "newData.isNumber() || auth.token.email === 'aialskrani@gmail.com'"
+        }
       },
-      "coupons": {
-        ".read": "auth != null",
-        "$code": {
-          ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com'",
-          "usedBy": {
-            ".write": "auth != null",
-            "$uid": {
-              ".validate": "auth.uid === $uid"
-            }
+      ".read": "auth != null && auth.token.email === 'aialskrani@gmail.com'"
+    },
+    "coupons": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com'",
+        "usedBy": {
+          ".write": "auth != null",
+          "$uid": {
+            ".validate": "auth.uid === $uid"
           }
         }
       }
     }
   }
+}
