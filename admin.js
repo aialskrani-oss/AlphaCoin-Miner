@@ -195,7 +195,7 @@ function renderCoupons(rows) {
       <td><span class="coupon-badge">${c.code}</span></td>
       <td style="color:var(--gold);font-family:'Orbitron',monospace">α${c.rewardAmount}</td>
       <td><span style="color:${c.isActive ? "var(--success)" : "var(--danger)"}">${c.isActive ? "✅ نشطة" : "❌ معطلة"}</span></td>
-      <td style="color:#888">${c.usedBy ? Object.values(c.usedBy).length : 0}</td>
+      <td style="color:#888">${c.usedBy && typeof c.usedBy === 'object' ? Object.keys(c.usedBy).length : 0}</td>
       <td style="display:flex;gap:.4rem;flex-wrap:wrap">
         <button class="btn-sm btn-edit" onclick="toggleCoupon('${c.code}',${c.isActive})">${c.isActive ? "تعطيل" : "تفعيل"}</button>
         <button class="btn-sm btn-del" onclick="deleteCoupon('${c.code}')">حذف</button>
@@ -216,7 +216,7 @@ createCouponBtn?.addEventListener("click", async () => {
     if (snap.exists()) { setResult(couponResult, "الكود موجود بالفعل", false); return; }
     await set(ref(db, `coupons/${code}`), {
       rewardAmount: reward, isActive: true,
-      usedBy: [], createdAt: Date.now()
+      usedBy: {}, createdAt: Date.now()
     });
     setResult(couponResult, `✅ تم إنشاء ${code}`, true);
     couponCodeInp.value = ""; couponRewardInp.value = "";
