@@ -1,24 +1,8 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/admin",
-      "dest": "/admin.html"
-    },
-    {
-      "src": "/admin\\.html",
-      "dest": "/admin.html"
-    },
-    {
-      "src": "/(.*\\.(js|css|html|svg|ico|png|jpg|jpeg|woff|woff2|ttf))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/admin",
+      "destination": "/admin.html"
     }
   ],
   "headers": [
@@ -28,6 +12,10 @@
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
         },
         {
           "key": "X-XSS-Protection",
