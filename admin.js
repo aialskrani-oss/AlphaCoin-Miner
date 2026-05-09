@@ -3,624 +3,615 @@ import { auth, db } from "./firebase-config.js";
     onAuthStateChanged, signOut
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
   import {
-    ref, get, set, update, remove, onValue
+    ref, get, set, update, remove, onValue, push, runTransaction, query, orderByChild, limitToLast
   } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
   const ADMIN_EMAIL = "aialskrani@gmail.com";
 
-  const POWER_UPGRADES    = [
-    {level:1,power:1,cost:0},{level:2,power:2,cost:100},
-    {level:3,power:3,cost:300},{level:4,power:5,cost:800},{level:5,power:8,cost:2000}
-  ];
-  const DURATION_UPGRADES = [
-    {level:1,hours:3,cost:0},{level:2,hours:6,cost:200},
-    {level:3,hours:12,cost:600},{level:4,hours:24,cost:1500}
-  ];
-
-  // ââ DOM helpers âââââââââââââââââââââââââââââââââââââââââââââââ
-  const $ = id => document.getElementById(id);
-  let toastTimer;
-  function toast(msg, type="ok") {
-    const el = $("admin-toast");
-    el.textContent = msg;
-    el.className = `toast show ${type}`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.className = "toast", 3200);
-  }
-  function setMsg(id, msg, cls="info") {
-    const el = $(id);
-    if (el) { el.textContent = msg; el.className = `section-msg ${cls}`; }
-  }
-
-  // ââ Modal helpers âââââââââââââââââââââââââââââââââââââââââââââ
-  function openModal(id)  { $(id).classList.add("open"); }
-  function closeModal(id) { $(id).classList.remove("open"); }
-  document.querySelectorAll("[data-close]").forEach(btn => {
-    btn.addEventListener("click", () => closeModal(btn.dataset.close));
-  });
-  document.querySelectorAll(".modal-overlay").forEach(ov => {
-    ov.addEventListener("click", e => { if (e.target === ov) closeModal(ov.id); });
-  });
-
-  // ââ State âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-  let allUsers    = {};   // { uid: data }
-  let allCoupons  = {};
-  let editingUid  = null;
-  let deletingUid = null;
-  let rewardUid   = null;
-  let chart       = null;
-
-  // ââ Auth gate âââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Auth guard ────────────────────────────────────────────────
+  let adminUser = null;
   onAuthStateChanged(auth, async user => {
     if (!user || user.email !== ADMIN_EMAIL) {
-      $("admin-loading").innerHTML =
-        `<div style="text-align:center;color:#ef4444;font-size:1rem">
-          â ØºÙØ± ÙØµØ±Ø­ ÙÙ Ø¨Ø§ÙØ¯Ø®ÙÙ
-          <br/><br/>
-          <a href="/" style="color:#f0b429;text-decoration:none">â Ø§ÙØ¹ÙØ¯Ø© ÙÙØ±Ø¦ÙØ³ÙØ©</a>
-        </div>`;
+      window.location.href = "/";
       return;
     }
-    $("admin-email-label").textContent = user.email;
-    $("admin-loading").style.display   = "none";
-    $("admin-panel").style.display     = "flex";
-    await loadAllData();
-    bindLiveListeners();
+    adminUser = user;
+    initAdmin();
   });
 
-  $("admin-logout-btn").addEventListener("click", () => {
-    if (confirm("ØªØ£ÙÙØ¯ ØªØ³Ø¬ÙÙ Ø§ÙØ®Ø±ÙØ¬Ø")) signOut(auth).then(() => location.href = "/");
-  });
-
-  // ââ Load all data once ââââââââââââââââââââââââââââââââââââââââ
-  async function loadAllData() {
-    const [usersSnap, couponsSnap] = await Promise.all([
-      get(ref(db, "users")),
-      get(ref(db, "coupons"))
-    ]);
-
-    allUsers   = {};
-    allCoupons = {};
-
-    if (usersSnap.exists())   usersSnap.forEach(c   => { allUsers[c.key]   = c.val(); });
-    if (couponsSnap.exists()) couponsSnap.forEach(c  => { allCoupons[c.key] = c.val(); });
-
-    renderStats();
-    renderUsersTable();
-    renderCouponsTable();
-    renderChart();
+  function initAdmin() {
+    listenUsers();
+    listenCoupons();
+    listenCards();
+    listenSettings();
+    loadReferralStats();
+    setDefaultCardTimes();
   }
 
-  // ââ Live listeners ââââââââââââââââââââââââââââââââââââââââââââ
-  function bindLiveListeners() {
-    onValue(ref(db, "users"),   snap => {
+  // ── Sidebar navigation ────────────────────────────────────────
+  window.showSection = function(id) {
+    document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".sidebar-item").forEach(b => b.classList.remove("active"));
+    const sec = document.getElementById("sec-" + id);
+    const btn = document.querySelector(`[data-sec="${id}"]`);
+    if (sec) sec.classList.add("active");
+    if (btn) btn.classList.add("active");
+    if (id === "leaderboard-admin") loadAdminLeaderboard();
+    if (id === "dashboard") buildDashboard();
+  };
+
+  // ── Toast ─────────────────────────────────────────────────────
+  function toast(msg, type="ok") {
+    const t = document.getElementById("toast");
+    if (!t) return;
+    t.textContent = msg; t.className = "toast show " + type;
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+  function setMsg(id, msg, type="ok") {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg; el.className = "section-msg " + type;
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── Modal helpers ─────────────────────────────────────────────
+  window.closeModal = (id) => { const el=document.getElementById(id); if(el) el.style.display="none"; };
+
+  // ── USERS ─────────────────────────────────────────────────────
+  let allUsers = {};
+  let usersPage = 1;
+  const USERS_PER_PAGE = 20;
+  let usersSortKey = "joinedAt";
+  let usersSortAsc = false;
+  let filteredUsers = [];
+
+  function listenUsers() {
+    onValue(ref(db,"users"), snap => {
       allUsers = {};
-      if (snap.exists()) snap.forEach(c => { allUsers[c.key] = c.val(); });
-      renderStats();
-      renderUsersTable();
-      renderChart();
-    });
-    onValue(ref(db, "coupons"), snap => {
-      allCoupons = {};
-      if (snap.exists()) snap.forEach(c => { allCoupons[c.key] = c.val(); });
-      renderStats();
-      renderCouponsTable();
+      if (snap.exists()) snap.forEach(u => { allUsers[u.key] = u.val(); });
+      buildDashboard();
+      filterUsers();
     });
   }
 
-  $("refresh-users-btn").addEventListener("click", loadAllData);
-
-  // ââ Stats âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-  function renderStats() {
-    const users   = Object.values(allUsers);
-    const coupons = Object.values(allCoupons);
-
-    const totalMined   = users.reduce((s, u) => s + (u.totalMined || 0), 0);
-    const activeCoupons = coupons.filter(c => c.isActive).length;
-
-    const todayStart  = new Date(); todayStart.setHours(0,0,0,0);
-    const newToday    = users.filter(u => (u.createdAt || 0) >= todayStart.getTime()).length;
-
-    $("stat-users").textContent       = users.length;
-    $("stat-total-mined").textContent = totalMined.toFixed(2);
-    $("stat-coupons").textContent     = activeCoupons;
-    $("stat-new-today").textContent   = newToday;
-  }
-
-  // ââ Chart âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-  function renderChart() {
-    const users = Object.values(allUsers);
-    const days  = [];
-    const counts = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0,0,0,0);
-      const next = new Date(d); next.setDate(next.getDate() + 1);
-      days.push(d.toLocaleDateString("ar-SA", { weekday:"short", day:"numeric" }));
-      counts.push(users.filter(u => {
-        const t = u.createdAt || 0;
-        return t >= d.getTime() && t < next.getTime();
-      }).length);
+  window.filterUsers = function() {
+    const q      = (document.getElementById("user-search")?.value || "").toLowerCase();
+    const filter = document.getElementById("user-filter")?.value || "all";
+    let users = Object.entries(allUsers);
+    if (q) users = users.filter(([,u]) => (u.username||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q));
+    if (filter === "banned") users = users.filter(([,u]) => u.isBanned);
+    if (filter === "active") {
+      const week = Date.now() - 7*86400000;
+      users = users.filter(([,u]) => (u.lastClaimTime||0) > week || (u.lastLoginDate||"") >= new Date(week).toISOString().slice(0,10));
     }
-
-    const ctx = $("users-chart").getContext("2d");
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: days,
-        datasets: [{
-          label: "ÙØ³ØªØ®Ø¯ÙÙÙ Ø¬Ø¯Ø¯",
-          data: counts,
-          backgroundColor: "rgba(240,180,41,.7)",
-          borderColor: "#f0b429",
-          borderWidth: 1.5,
-          borderRadius: 6,
-          hoverBackgroundColor: "rgba(240,180,41,.9)",
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color:"#9090aa", font:{ family:"Cairo", size:12 } } },
-          tooltip: { backgroundColor:"#1a1a2e", titleColor:"#f0b429", bodyColor:"#e8e8f0" }
-        },
-        scales: {
-          x: { ticks:{ color:"#9090aa", font:{family:"Cairo"} }, grid:{ color:"rgba(255,255,255,.04)" } },
-          y: { ticks:{ color:"#9090aa", font:{family:"Cairo"}, stepSize:1, precision:0 }, grid:{ color:"rgba(255,255,255,.04)" }, beginAtZero:true }
-        }
-      }
+    users.sort((a,b) => {
+      const av = a[1][usersSortKey] ?? 0, bv = b[1][usersSortKey] ?? 0;
+      if (typeof av === "string") return usersSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+      return usersSortAsc ? av-bv : bv-av;
     });
-  }
+    filteredUsers = users;
+    usersPage = 1;
+    renderUsersTable();
+  };
 
-  // ââ Users table âââââââââââââââââââââââââââââââââââââââââââââââ
-  function getFilteredSortedUsers() {
-    const q     = ($("user-search").value || "").toLowerCase().trim();
-    const sort  = $("user-sort").value;
-    let users   = Object.entries(allUsers).map(([uid, d]) => ({ uid, ...d }));
-
-    if (q) users = users.filter(u =>
-      (u.username || "").toLowerCase().includes(q) ||
-      (u.email    || "").toLowerCase().includes(q)
-    );
-
-    const [field, dir] = sort.split("-");
-    users.sort((a, b) => {
-      const av = a[field] || 0;
-      const bv = b[field] || 0;
-      return dir === "desc" ? bv - av : av - bv;
-    });
-    return users;
-  }
+  window.sortUsers = function(key) {
+    if (usersSortKey === key) usersSortAsc = !usersSortAsc;
+    else { usersSortKey = key; usersSortAsc = false; }
+    filterUsers();
+  };
 
   function renderUsersTable() {
-    const users  = getFilteredSortedUsers();
-    const tbody  = $("users-tbody");
+    const tbody = document.getElementById("users-tbody");
+    const label = document.getElementById("users-count-label");
+    const pag   = document.getElementById("users-pagination");
+    if (!tbody) return;
+    const total = filteredUsers.length;
+    const pages = Math.ceil(total / USERS_PER_PAGE);
+    const slice = filteredUsers.slice((usersPage-1)*USERS_PER_PAGE, usersPage*USERS_PER_PAGE);
+    if (label) label.textContent = `إجمالي: ${total} مستخدم — الصفحة ${usersPage}/${pages||1}`;
 
-    if (users.length === 0) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">ÙØ§ ÙÙØ¬Ø¯ ÙØ³ØªØ®Ø¯ÙÙÙ</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = users.map(u => {
-      const lastClaim = u.lastClaimTime
-        ? new Date(u.lastClaimTime).toLocaleDateString("ar-SA")
-        : "â";
-      const avatar = u.photoURL
-        ? `<img class="user-avatar-sm" src="${escHtml(u.photoURL)}" alt="" onerror="this.src=''"/>`
-        : `<div class="user-avatar-sm" style="display:flex;align-items:center;justify-content:center;font-size:1rem;">ð¤</div>`;
+    tbody.innerHTML = slice.map(([uid, u]) => {
+      const joinDate = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString("ar-SA") : "—";
       return `<tr>
+        <td><span style="font-weight:600">${escHtml(u.username||"—")}</span>${u.isBanned?`<span class="banned-badge">محظور</span>`:""}<br/><span style="font-size:.68rem;color:var(--text3)">${escHtml(u.email||"")}</span></td>
+        <td style="font-family:'Orbitron',monospace;color:var(--gold)">${(u.balance||0).toFixed(4)}</td>
+        <td>${u.streak||0} 🔥</td>
+        <td style="font-size:.72rem;color:var(--text2)">${joinDate}</td>
+        <td>${u.isBanned?`<span style="color:var(--red);font-size:.75rem">🚫 محظور</span>`:`<span style="color:var(--green);font-size:.75rem">✅ نشط</span>`}</td>
         <td>
-          <div class="user-cell">
-            ${avatar}
-            <div>
-              <div class="user-name">${escHtml(u.username || "â")}</div>
-              <div class="user-email">${escHtml(u.email || "â")}</div>
-            </div>
-          </div>
-        </td>
-        <td><span class="val-gold">${(u.balance||0).toFixed(4)}</span></td>
-        <td><span class="val-cyan">${(u.totalMined||0).toFixed(4)}</span></td>
-        <td>${u.miningPower||1} Î±/Ø³</td>
-        <td>${u.maxMiningDuration||3} Ø³</td>
-        <td style="font-size:.78rem;color:var(--text2)">${lastClaim}</td>
-        <td>
-          <div class="actions-cell">
-            <button class="btn-icon edit" title="ØªØ¹Ø¯ÙÙ" onclick="openEditModal('${u.uid}')">âï¸</button>
-            <button class="btn-icon reward" title="ÙÙØ§ÙØ£Ø© Ø³Ø±ÙØ¹Ø©" onclick="openRewardModal('${u.uid}')">ð</button>
-            <button class="btn-icon del" title="Ø­Ø°Ù" onclick="openDeleteModal('${u.uid}')">ðï¸</button>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+            <button class="btn-action btn-blue" style="padding:.3rem .6rem;font-size:.7rem" onclick="openEditModal('${uid}')">✏️</button>
+            <button class="btn-action btn-gold" style="padding:.3rem .6rem;font-size:.7rem" onclick="openRewardModal('${uid}')">🎁</button>
+            <button class="btn-action ${u.isBanned?"btn-green":"btn-red"}" style="padding:.3rem .6rem;font-size:.7rem" onclick="toggleBan('${uid}',${!u.isBanned})">${u.isBanned?"🔓":"🔒"}</button>
+            <button class="btn-action btn-red" style="padding:.3rem .6rem;font-size:.7rem" onclick="deleteUser('${uid}')">🗑</button>
           </div>
         </td>
       </tr>`;
     }).join("");
+
+    // Pagination
+    if (pag) {
+      pag.innerHTML = Array.from({length:pages},(_,i)=>
+        `<button class="page-btn ${i+1===usersPage?"active":""}" onclick="goPage(${i+1})">${i+1}</button>`
+      ).join("");
+    }
   }
 
-  $("user-search").addEventListener("input",  renderUsersTable);
-  $("user-sort").addEventListener("change",   renderUsersTable);
+  window.goPage = (p) => { usersPage=p; renderUsersTable(); };
 
-  // ââ Edit modal ââââââââââââââââââââââââââââââââââââââââââââââââ
-  window.openEditModal = uid => {
-    editingUid = uid;
+  // ── Edit user ─────────────────────────────────────────────────
+  let editUid = null;
+  window.openEditModal = (uid) => {
     const u = allUsers[uid];
     if (!u) return;
-    $("edit-user-info").innerHTML =
-      `<strong>${escHtml(u.username||"â")}</strong> â ${escHtml(u.email||"â")}<br/>
-      Ø§ÙØ±ØµÙØ¯ Ø§ÙØ­Ø§ÙÙ: <strong style="color:var(--gold)">${(u.balance||0).toFixed(6)} Î±</strong>`;
-    $("edit-balance").value        = u.balance       || 0;
-    $("edit-total").value          = u.totalMined    || 0;
-    $("edit-power").value          = u.miningPower   || 1;
-    $("edit-power-level").value    = u.miningPowerLevel   || 1;
-    $("edit-duration").value       = u.maxMiningDuration  || 3;
-    $("edit-duration-level").value = u.miningDurationLevel || 1;
-    setMsg("edit-user-msg", "", "");
-    openModal("edit-modal");
+    editUid = uid;
+    document.getElementById("edit-username").value  = u.username||"";
+    document.getElementById("edit-balance").value   = u.balance||0;
+    document.getElementById("edit-power").value     = u.miningPower||1;
+    document.getElementById("edit-duration").value  = u.maxMiningDuration||1;
+    document.getElementById("edit-ban-reason").value= u.banReason||"";
+    setMsg("edit-msg","","");
+    document.getElementById("edit-modal").style.display="flex";
   };
 
-  $("save-edit-btn").addEventListener("click", async () => {
-    if (!editingUid) return;
-    const newBal = parseFloat($("edit-balance").value);
-    const oldBal = allUsers[editingUid]?.balance || 0;
-    if (Math.abs(newBal - oldBal) > 1000) {
-      if (!confirm(`ØªØºÙÙØ± Ø§ÙØ±ØµÙØ¯ Ø¨Ù ${Math.abs(newBal-oldBal).toFixed(2)} Î± â ÙÙ Ø£ÙØª ÙØªØ£ÙØ¯Ø`)) return;
-    }
-    const upd = {
-      balance:             parseFloat($("edit-balance").value)        || 0,
-      totalMined:          parseFloat($("edit-total").value)          || 0,
-      miningPower:         parseFloat($("edit-power").value)          || 1,
-      miningPowerLevel:    parseInt($("edit-power-level").value)      || 1,
-      maxMiningDuration:   parseFloat($("edit-duration").value)       || 3,
-      miningDurationLevel: parseInt($("edit-duration-level").value)   || 1,
-    };
+  window.saveUserEdit = async () => {
+    if (!editUid) return;
+    const username  = document.getElementById("edit-username").value.trim();
+    const balance   = parseFloat(document.getElementById("edit-balance").value)||0;
+    const power     = parseFloat(document.getElementById("edit-power").value)||1;
+    const duration  = parseFloat(document.getElementById("edit-duration").value)||1;
+    const banReason = document.getElementById("edit-ban-reason").value.trim();
+    const isBanned  = !!banReason;
     try {
-      await update(ref(db, `users/${editingUid}`), upd);
-      setMsg("edit-user-msg", "â ØªÙ Ø§ÙØ­ÙØ¸ Ø¨ÙØ¬Ø§Ø­", "ok");
-      toast("ØªÙ Ø­ÙØ¸ Ø¨ÙØ§ÙØ§Øª Ø§ÙÙØ³ØªØ®Ø¯Ù â");
-    } catch(e) { setMsg("edit-user-msg", "â Ø®Ø·Ø£: " + e.message, "err"); }
-  });
+      await update(ref(db,`users/${editUid}`),{username,balance,miningPower:power,maxMiningDuration:duration,isBanned,banReason:banReason||""});
+      setMsg("edit-msg","✅ تم الحفظ","ok"); toast("تم تحديث المستخدم ✅");
+      setTimeout(()=>closeModal("edit-modal"),1200);
+    } catch(e){setMsg("edit-msg","❌ "+e.message,"err");}
+  };
 
-  $("free-upgrade-edit-btn").addEventListener("click", async () => {
-    if (!editingUid) return;
-    const u   = allUsers[editingUid];
-    const cPL = u.miningPowerLevel    || 1;
-    const cDL = u.miningDurationLevel || 1;
-    const nP  = POWER_UPGRADES.find(x => x.level === cPL + 1);
-    const nD  = DURATION_UPGRADES.find(x => x.level === cDL + 1);
-    const upd = {};
-    if (nP) { upd.miningPower = nP.power;  upd.miningPowerLevel = nP.level; }
-    if (nD) { upd.maxMiningDuration = nD.hours; upd.miningDurationLevel = nD.level; }
-    if (!Object.keys(upd).length) { setMsg("edit-user-msg", "Ø§ÙÙØ³ØªØ®Ø¯Ù Ø¹ÙÙ Ø£Ø¹ÙÙ ÙØ³ØªÙÙ", "info"); return; }
-    try {
-      await update(ref(db, `users/${editingUid}`), upd);
-      if (upd.miningPower)     $("edit-power").value      = upd.miningPower;
-      if (upd.miningPowerLevel) $("edit-power-level").value = upd.miningPowerLevel;
-      if (upd.maxMiningDuration) $("edit-duration").value  = upd.maxMiningDuration;
-      if (upd.miningDurationLevel) $("edit-duration-level").value = upd.miningDurationLevel;
-      setMsg("edit-user-msg", "â ØªÙØª Ø§ÙØªØ±ÙÙØ© Ø§ÙÙØ¬Ø§ÙÙØ©", "ok");
-      toast("ØªÙØª Ø§ÙØªØ±ÙÙØ© Ø§ÙÙØ¬Ø§ÙÙØ© ð");
-    } catch(e) { setMsg("edit-user-msg", "â Ø®Ø·Ø£: " + e.message, "err"); }
-  });
-
-  $("reset-mining-btn").addEventListener("click", async () => {
-    if (!editingUid) return;
-    if (!confirm("Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø¹Ø¯Ø§Ø¯ Ø§ÙØªØ¹Ø¯ÙÙ ÙÙØ°Ø§ Ø§ÙÙØ³ØªØ®Ø¯ÙØ")) return;
-    const now = Date.now();
-    try {
-      await update(ref(db, `users/${editingUid}`), { miningStartTime: now, lastClaimTime: now });
-      setMsg("edit-user-msg", "â ØªÙØª Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§ÙØªØ¹Ø¯ÙÙ", "ok");
-      toast("ØªÙØª Ø¥Ø¹Ø§Ø¯Ø© Ø§ÙØ¶Ø¨Ø· ð");
-    } catch(e) { setMsg("edit-user-msg", "â Ø®Ø·Ø£: " + e.message, "err"); }
-  });
-
-  // ââ Quick Reward modal ââââââââââââââââââââââââââââââââââââââââ
-  window.openRewardModal = uid => {
+  // ── Reward user ───────────────────────────────────────────────
+  let rewardUid = null;
+  window.openRewardModal = (uid) => {
     rewardUid = uid;
-    const u = allUsers[uid];
-    if (!u) return;
-    $("reward-user-info").innerHTML =
-      `<strong>${escHtml(u.username||"â")}</strong> â Ø±ØµÙØ¯ Ø­Ø§ÙÙ: <strong style="color:var(--gold)">${(u.balance||0).toFixed(6)} Î±</strong>`;
-    $("reward-amount").value = "";
-    setMsg("reward-msg", "", "");
-    openModal("reward-modal");
+    document.getElementById("reward-amount").value = "";
+    document.getElementById("reward-reason").value = "";
+    setMsg("reward-msg","","");
+    document.getElementById("reward-modal").style.display="flex";
   };
 
-  $("confirm-reward-btn").addEventListener("click", async () => {
+  window.saveReward = async () => {
     if (!rewardUid) return;
-    const amount = parseFloat($("reward-amount").value);
-    if (!amount || amount <= 0) { setMsg("reward-msg", "Ø£Ø¯Ø®Ù ÙØ¨ÙØºØ§Ù ØµØ­ÙØ­Ø§Ù", "err"); return; }
-    const u      = allUsers[rewardUid];
-    const newBal = Math.round(((u.balance || 0) + amount) * 1e6) / 1e6;
+    const amount = parseFloat(document.getElementById("reward-amount").value)||0;
+    if (amount<=0){setMsg("reward-msg","أدخل مبلغاً صحيحاً","err");return;}
     try {
-      await update(ref(db, `users/${rewardUid}`), { balance: newBal });
-      toast(`+Î±${amount} ØªÙØª Ø§ÙÙÙØ§ÙØ£Ø© â`);
-      closeModal("reward-modal");
-    } catch(e) { setMsg("reward-msg", "â Ø®Ø·Ø£: " + e.message, "err"); }
-  });
-
-  // ââ Delete modal ââââââââââââââââââââââââââââââââââââââââââââââ
-  window.openDeleteModal = uid => {
-    deletingUid = uid;
-    const u = allUsers[uid];
-    $("delete-confirm-text").innerHTML =
-      `ÙÙ Ø£ÙØª ÙØªØ£ÙØ¯ ÙÙ Ø­Ø°Ù Ø§ÙÙØ³ØªØ®Ø¯Ù <strong>${escHtml(u?.username||uid)}</strong>Ø<br/>
-      <strong style="color:var(--red)">ÙØ§ ÙÙÙÙ Ø§ÙØªØ±Ø§Ø¬Ø¹ Ø¹Ù ÙØ°Ù Ø§ÙØ¹ÙÙÙØ©.</strong>`;
-    openModal("delete-modal");
+      await runTransaction(ref(db,`users/${rewardUid}/balance`),bal=>Math.round(((bal||0)+amount)*1e6)/1e6);
+      setMsg("reward-msg",`✅ تم منح α${amount}`,"ok"); toast("تم منح المكافأة ✅");
+      setTimeout(()=>closeModal("reward-modal"),1200);
+    } catch(e){setMsg("reward-msg","❌ "+e.message,"err");}
   };
 
-  $("confirm-delete-btn").addEventListener("click", async () => {
-    if (!deletingUid) return;
-    try {
-      await remove(ref(db, `users/${deletingUid}`));
-      toast("ØªÙ Ø­Ø°Ù Ø§ÙÙØ³ØªØ®Ø¯Ù ðï¸", "ok");
-      closeModal("delete-modal");
-      deletingUid = null;
-    } catch(e) { toast("Ø®Ø·Ø£: " + e.message, "err"); }
-  });
-
-  // ââ Bulk Reward âââââââââââââââââââââââââââââââââââââââââââââââ
-  $("bulk-reward-btn").addEventListener("click", async () => {
-    const amount = parseFloat($("bulk-reward-val").value);
-    if (!amount || amount <= 0) { setMsg("bulk-msg", "Ø£Ø¯Ø®Ù ÙØ¨ÙØºØ§Ù ØµØ­ÙØ­Ø§Ù", "err"); return; }
-    const users = Object.entries(allUsers);
-    if (!users.length) { setMsg("bulk-msg", "ÙØ§ ÙÙØ¬Ø¯ ÙØ³ØªØ®Ø¯ÙÙÙ", "err"); return; }
-    if (!confirm(`ØªØ·Ø¨ÙÙ ÙÙØ§ÙØ£Ø© +Î±${amount} Ø¹ÙÙ ${users.length} ÙØ³ØªØ®Ø¯ÙÙÙØ`)) return;
-
-    $("bulk-reward-btn").disabled = true;
-    setMsg("bulk-msg", `Ø¬Ø§Ø± Ø§ÙØªØ·Ø¨ÙÙ Ø¹ÙÙ ${users.length} ÙØ³ØªØ®Ø¯ÙÙÙâ¦`, "info");
-
-    let done = 0, failed = 0;
-    await Promise.all(users.map(async ([uid, u]) => {
-      try {
-        const newBal = Math.round(((u.balance||0) + amount) * 1e6) / 1e6;
-        await update(ref(db, `users/${uid}`), { balance: newBal });
-        done++;
-      } catch { failed++; }
-    }));
-
-    $("bulk-reward-btn").disabled = false;
-    $("bulk-reward-val").value    = "";
-    setMsg("bulk-msg", `â ØªÙØª Ø§ÙÙÙØ§ÙØ£Ø© ÙÙ ${done} ÙØ³ØªØ®Ø¯ÙÙÙ${failed ? (" â ÙØ´Ù: " + failed) : ""}`, "ok");
-    toast(`ØªÙ ØªÙØ²ÙØ¹ +Î±${amount} Ø¹ÙÙ ${done} ÙØ³ØªØ®Ø¯ÙÙÙ ð`);
-  });
-
-  // ââ Coupons table âââââââââââââââââââââââââââââââââââââââââââââ
-  function renderCouponsTable() {
-    const tbody = $("coupons-tbody");
-    const entries = Object.entries(allCoupons);
-    if (!entries.length) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="6">ÙØ§ ØªÙØ¬Ø¯ ÙØ³Ø§Ø¦Ù Ø¨Ø¹Ø¯</td></tr>`;
-      return;
+  // ── Bulk reward ───────────────────────────────────────────────
+  window.executeBulkReward = async () => {
+    const amount = parseFloat(document.getElementById("bulk-amount").value)||0;
+    const scope  = document.getElementById("bulk-scope").value;
+    if (amount<=0){setMsg("bulk-msg","أدخل مبلغاً صحيحاً","err");return;}
+    setMsg("bulk-msg","⏳ جار التنفيذ…","info");
+    let users = Object.entries(allUsers);
+    if (scope === "active") {
+      const week = Date.now()-7*86400000;
+      users = users.filter(([,u])=>(u.lastClaimTime||0)>week);
     }
-    tbody.innerHTML = entries.map(([code, c]) => {
-      const used = c.usedBy ? Object.keys(c.usedBy).length : 0;
-      const date = c.createdAt ? new Date(c.createdAt).toLocaleDateString("ar-SA") : "â";
-      return `<tr>
-        <td><span style="font-family:monospace;color:var(--gold);letter-spacing:1px">${escHtml(code)}</span></td>
-        <td class="val-cyan">${c.rewardAmount} Î±</td>
-        <td><span class="badge ${c.isActive?"badge-active":"badge-off"}">${c.isActive?"ÙØ´Ø·":"ÙØ¹Ø·ÙÙ"}</span></td>
-        <td style="color:var(--text2)">${used} ÙØ±Ø©</td>
-        <td style="font-size:.78rem;color:var(--text2)">${date}</td>
-        <td>
-          <div class="actions-cell">
-            <button class="btn-icon" title="${c.isActive?"ØªØ¹Ø·ÙÙ":"ØªÙØ¹ÙÙ"}"
-              style="border-color:${c.isActive?"rgba(239,68,68,.4)":"rgba(34,197,94,.4)"};color:${c.isActive?"var(--red)":"var(--green)"}"
-              onclick="toggleCoupon('${escHtml(code)}',${!c.isActive})">${c.isActive?"â¸":"â¶"}</button>
-            <button class="btn-icon del" title="Ø­Ø°Ù" onclick="deleteCoupon('${escHtml(code)}')">ðï¸</button>
-          </div>
-        </td>
-      </tr>`;
+    let count=0;
+    try {
+      for (const [uid] of users) {
+        await runTransaction(ref(db,`users/${uid}/balance`),bal=>Math.round(((bal||0)+amount)*1e6)/1e6);
+        count++;
+      }
+      setMsg("bulk-msg",`✅ تم منح α${amount} لـ ${count} مستخدم`,"ok");
+      toast(`✅ مكافأة جماعية: ${count} مستخدم`);
+      setTimeout(()=>closeModal("bulk-modal"),2000);
+    } catch(e){setMsg("bulk-msg","❌ "+e.message,"err");}
+  };
+
+  // ── Ban / Unban / Delete ──────────────────────────────────────
+  window.toggleBan = async (uid, ban) => {
+    const reason = ban ? (prompt("سبب الحظر:") || "مخالفة قوانين الاستخدام") : "";
+    try {
+      await update(ref(db,`users/${uid}`),{isBanned:ban,banReason:reason});
+      toast(ban?"🚫 تم الحظر":"✅ تم رفع الحظر");
+    } catch(e){toast("❌ "+e.message,"err");}
+  };
+
+  window.deleteUser = async (uid) => {
+    if (!confirm("حذف هذا المستخدم نهائياً؟")) return;
+    try { await remove(ref(db,`users/${uid}`)); toast("🗑 تم الحذف"); }
+    catch(e){toast("❌ "+e.message,"err");}
+  };
+
+  // ── Export CSV ────────────────────────────────────────────────
+  window.exportCSV = () => {
+    const rows=[["UID","الاسم","البريد","الرصيد","Streak","تاريخ التسجيل","الحالة"]];
+    Object.entries(allUsers).forEach(([uid,u])=>{
+      rows.push([uid,u.username||"",u.email||"",(u.balance||0).toFixed(6),u.streak||0,
+        u.joinedAt?new Date(u.joinedAt).toLocaleDateString("ar-SA"):"",
+        u.isBanned?"محظور":"نشط"]);
+    });
+    const csv="\uFEFF"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const a=document.createElement("a");
+    a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+    a.download="alphacoin_users_"+new Date().toISOString().slice(0,10)+".csv";
+    a.click(); toast("📤 تم تصدير CSV");
+  };
+
+  // ── Dashboard ─────────────────────────────────────────────────
+  let chartInstance = null;
+  function buildDashboard() {
+    const users = Object.values(allUsers);
+    const today = new Date().toISOString().slice(0,10);
+    const totalBal = users.reduce((s,u)=>s+(u.balance||0),0);
+    const activeToday = users.filter(u=>u.lastLoginDate===today).length;
+    const bannedCount = users.filter(u=>u.isBanned).length;
+    document.getElementById("stat-total-users").textContent = users.length;
+    document.getElementById("stat-total-balance").textContent = totalBal.toFixed(2);
+    document.getElementById("stat-active-today").textContent = activeToday;
+    document.getElementById("stat-banned").textContent = bannedCount;
+
+    // Top 5 by balance
+    const top5 = [...users].sort((a,b)=>(b.balance||0)-(a.balance||0)).slice(0,5);
+    const topEl = document.getElementById("top-users-list");
+    if (topEl) topEl.innerHTML = top5.map((u,i)=>
+      `<div class="item-row"><span class="item-name">${["🥇","🥈","🥉","4️⃣","5️⃣"][i]} ${escHtml(u.username||"—")}</span>
+      <span class="item-meta">α ${(u.balance||0).toFixed(4)}</span></div>`
+    ).join("");
+
+    // Chart: users joined per day last 7 days
+    const days=[], counts=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(Date.now()-i*86400000).toISOString().slice(0,10);
+      days.push(d.slice(5));
+      counts.push(users.filter(u=>u.joinedAt&&new Date(u.joinedAt).toISOString().slice(0,10)===d).length);
+    }
+    const ctx=document.getElementById("chart-users");
+    if(ctx){
+      if(chartInstance) chartInstance.destroy();
+      chartInstance=new Chart(ctx,{
+        type:"bar",
+        data:{labels:days,datasets:[{label:"مستخدمون جدد",data:counts,backgroundColor:"rgba(240,180,41,.5)",borderColor:"#f0b429",borderWidth:1,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#a0a0b8",font:{family:"Cairo"}}}},scales:{x:{ticks:{color:"#a0a0b8"}},y:{ticks:{color:"#a0a0b8"},beginAtZero:true}}}
+      });
+    }
+  }
+
+  // ── Admin Leaderboard ─────────────────────────────────────────
+  async function loadAdminLeaderboard() {
+    const el = document.getElementById("admin-leaderboard-list");
+    if (!el) return;
+    el.innerHTML="<div style='color:var(--text3);font-size:.85rem'>جار التحميل…</div>";
+    const q = query(ref(db,"users"),orderByChild("balance"),limitToLast(20));
+    const snap = await get(q);
+    const users=[];
+    if(snap.exists()) snap.forEach(c=>users.push({uid:c.key,...c.val()}));
+    users.sort((a,b)=>(b.balance||0)-(a.balance||0));
+    el.innerHTML=users.map((u,i)=>`
+      <div class="item-row">
+        <span class="item-name">${["🥇","🥈","🥉"][i]||(i+1+".")} ${escHtml(u.username||"—")}</span>
+        <span class="item-meta" style="color:var(--text2)">${escHtml(u.email||"")}</span>
+        <span class="item-meta" style="color:var(--gold);font-family:'Orbitron',monospace">α${(u.balance||0).toFixed(4)}</span>
+        <button class="btn-action btn-gold" style="padding:.25rem .6rem;font-size:.7rem" onclick="openRewardModal('${u.uid}')">🎁</button>
+      </div>`).join("");
+  }
+
+  // ── Settings ──────────────────────────────────────────────────
+  function listenSettings() {
+    onValue(ref(db,"settings"), snap => {
+      const s = snap.exists() ? snap.val() : {};
+      // Maintenance
+      const mEl = document.getElementById("maintenance-toggle");
+      const mmEl= document.getElementById("maintenance-msg-inp");
+      if(mEl) mEl.checked = !!(s.maintenance?.enabled);
+      if(mmEl) mmEl.value = s.maintenance?.message || "";
+      // Announcement
+      const aEl = document.getElementById("ann-toggle");
+      const atEl= document.getElementById("ann-text");
+      const ayEl= document.getElementById("ann-type");
+      if(aEl) aEl.checked = !!(s.announcement?.enabled);
+      if(atEl) atEl.value = s.announcement?.message || "";
+      if(ayEl) ayEl.value = s.announcement?.type || "info";
+      // Daily bonus
+      const dbEl  = document.getElementById("daily-toggle");
+      const dbBase= document.getElementById("daily-base");
+      const dbMul = document.getElementById("daily-multiplier");
+      const dbMax = document.getElementById("daily-maxstreak");
+      if(dbEl)   dbEl.checked  = s.dailyBonus?.enabled !== false;
+      if(dbBase) dbBase.value  = s.dailyBonus?.baseAmount ?? 5;
+      if(dbMul)  dbMul.value   = s.dailyBonus?.streakMultiplier ?? 1.2;
+      if(dbMax)  dbMax.value   = s.dailyBonus?.maxStreak ?? 30;
+      updateDailyPreview();
+      // Referral
+      const rEl  = document.getElementById("ref-toggle");
+      const rRer = document.getElementById("ref-referrer");
+      const rRee = document.getElementById("ref-referee");
+      if(rEl)  rEl.checked = s.referral?.enabled !== false;
+      if(rRer) rRer.value  = s.referral?.referrerReward ?? 20;
+      if(rRee) rRee.value  = s.referral?.refereeReward  ?? 10;
+    });
+  }
+
+  let saveSettingsTimer = null;
+  function debounceSave(fn) {
+    clearTimeout(saveSettingsTimer);
+    saveSettingsTimer = setTimeout(fn, 800);
+  }
+
+  window.saveMaintenanceSetting = () => debounceSave(async () => {
+    const enabled = document.getElementById("maintenance-toggle")?.checked || false;
+    const message = document.getElementById("maintenance-msg-inp")?.value || "";
+    try {
+      await update(ref(db,"settings/maintenance"),{enabled,message});
+      setMsg("maintenance-save-msg","✅ تم الحفظ تلقائياً","ok");
+    } catch(e){setMsg("maintenance-save-msg","❌ "+e.message,"err");}
+  });
+
+  window.saveAnnouncementSetting = () => debounceSave(async () => {
+    const enabled = document.getElementById("ann-toggle")?.checked || false;
+    const message = document.getElementById("ann-text")?.value || "";
+    const type    = document.getElementById("ann-type")?.value || "info";
+    try {
+      await update(ref(db,"settings/announcement"),{enabled,message,type});
+      setMsg("ann-save-msg","✅ تم الحفظ تلقائياً","ok");
+    } catch(e){setMsg("ann-save-msg","❌ "+e.message,"err");}
+  });
+
+  window.saveDailySettings = () => debounceSave(async () => {
+    const enabled = document.getElementById("daily-toggle")?.checked !== false;
+    const base    = parseFloat(document.getElementById("daily-base")?.value)||5;
+    const mul     = parseFloat(document.getElementById("daily-multiplier")?.value)||1.2;
+    const maxS    = parseInt(document.getElementById("daily-maxstreak")?.value)||30;
+    try {
+      await update(ref(db,"settings/dailyBonus"),{enabled,baseAmount:base,streakMultiplier:mul,maxStreak:maxS});
+      setMsg("daily-save-msg","✅ تم الحفظ تلقائياً","ok");
+      updateDailyPreview();
+    } catch(e){setMsg("daily-save-msg","❌ "+e.message,"err");}
+  });
+
+  function updateDailyPreview() {
+    const base = parseFloat(document.getElementById("daily-base")?.value)||5;
+    const mul  = parseFloat(document.getElementById("daily-multiplier")?.value)||1.2;
+    const el   = document.getElementById("daily-preview");
+    if (!el) return;
+    const d1  = (base * Math.pow(mul,0)).toFixed(4);
+    const d5  = (base * Math.pow(mul,4)).toFixed(4);
+    const d10 = (base * Math.pow(mul,9)).toFixed(4);
+    el.textContent = `يوم 1: α${d1} | يوم 5: α${d5} | يوم 10: α${d10}`;
+  }
+
+  window.saveReferralSettings = () => debounceSave(async () => {
+    const enabled  = document.getElementById("ref-toggle")?.checked !== false;
+    const referrer = parseFloat(document.getElementById("ref-referrer")?.value)||20;
+    const referee  = parseFloat(document.getElementById("ref-referee")?.value)||10;
+    try {
+      await update(ref(db,"settings/referral"),{enabled,referrerReward:referrer,refereeReward:referee});
+      setMsg("ref-save-msg","✅ تم الحفظ تلقائياً","ok");
+    } catch(e){setMsg("ref-save-msg","❌ "+e.message,"err");}
+  });
+
+  // ── Referral stats ────────────────────────────────────────────
+  async function loadReferralStats() {
+    const el = document.getElementById("referral-stats");
+    if (!el) return;
+    const snap = await get(ref(db,"referrals"));
+    if (!snap.exists()) { el.innerHTML="<div style='color:var(--text3);font-size:.85rem'>لا توجد بيانات إحالة بعد</div>"; return; }
+    let totalReferrals=0, topReferrer="—", topCount=0;
+    snap.forEach(r => {
+      const d=r.val();
+      const count=d.usedBy?Object.keys(d.usedBy).length:0;
+      totalReferrals+=count;
+      if(count>topCount){topCount=count;topReferrer=d.ownerName||"—";}
+    });
+    el.innerHTML=`
+      <div class="stats-grid" style="margin:0">
+        <div class="stat-card"><div class="val">${totalReferrals}</div><div class="lbl">إجمالي الإحالات</div></div>
+        <div class="stat-card"><div class="val" style="font-size:.9rem">${escHtml(topReferrer)}</div><div class="lbl">أكثر مُحيل (${topCount})</div></div>
+      </div>`;
+  }
+
+  // ── COUPONS ───────────────────────────────────────────────────
+  let allCoupons = {};
+  function listenCoupons() {
+    onValue(ref(db,"coupons"), snap => {
+      allCoupons = {};
+      if (snap.exists()) snap.forEach(c => { allCoupons[c.key] = c.val(); });
+      renderCoupons();
+    });
+  }
+
+  window.createCoupon = async () => {
+    const code   = document.getElementById("coup-code")?.value?.trim().toUpperCase();
+    const reward = parseFloat(document.getElementById("coup-reward")?.value)||0;
+    const maxU   = parseInt(document.getElementById("coup-max")?.value)||0;
+    if (!code) { setMsg("coup-create-msg","أدخل كود الكوبون","err"); return; }
+    if (!reward) { setMsg("coup-create-msg","أدخل مكافأة صحيحة","err"); return; }
+    try {
+      await set(ref(db,`coupons/${code}`),{reward,maxUses:maxU,active:true,createdAt:Date.now(),usedBy:{}});
+      setMsg("coup-create-msg","✅ تم إنشاء الكوبون","ok"); toast("تم إنشاء الكوبون ✅");
+      document.getElementById("coup-code").value="";
+      document.getElementById("coup-reward").value="";
+    } catch(e){setMsg("coup-create-msg","❌ "+e.message,"err");}
+  };
+
+  function renderCoupons() {
+    const el = document.getElementById("coupons-list");
+    if (!el) return;
+    const entries = Object.entries(allCoupons).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+    if (!entries.length) { el.innerHTML="<div style='color:var(--text3);font-size:.85rem;padding:.8rem'>لا توجد كوبونات</div>"; return; }
+    el.innerHTML = entries.map(([code,c])=>{
+      const uses=c.usedBy?Object.keys(c.usedBy).length:0;
+      return `<div class="item-row">
+        <span class="item-name" style="font-family:'Orbitron',monospace;font-size:.82rem">${escHtml(code)}</span>
+        <span class="item-meta">α${c.reward} | ${uses}${c.maxUses>0?" / "+c.maxUses:""} استخدام</span>
+        <button class="btn-action ${c.active?"btn-red":"btn-green"}" style="padding:.25rem .6rem;font-size:.7rem"
+          onclick="toggleCoupon('${code}',${!c.active})">${c.active?"⏸ تعطيل":"▶ تفعيل"}</button>
+        <button class="btn-action btn-red" style="padding:.25rem .6rem;font-size:.7rem"
+          onclick="deleteCoupon('${code}')">🗑</button>
+      </div>`;
     }).join("");
   }
 
-  window.toggleCoupon = async (code, isActive) => {
-    try {
-      await update(ref(db, `coupons/${code}`), { isActive });
-      toast(isActive ? "ØªÙ ØªÙØ¹ÙÙ Ø§ÙÙØ³ÙÙØ© â" : "ØªÙ ØªØ¹Ø·ÙÙ Ø§ÙÙØ³ÙÙØ© â¸");
-    } catch(e) { toast("Ø®Ø·Ø£: " + e.message, "err"); }
+  window.toggleCoupon = async (code, active) => {
+    try { await update(ref(db,`coupons/${code}`),{active}); toast(active?"▶ تم التفعيل":"⏸ تم التعطيل"); }
+    catch(e){toast("❌ "+e.message,"err");}
+  };
+  window.deleteCoupon = async (code) => {
+    if (!confirm("حذف الكوبون؟")) return;
+    try { await remove(ref(db,`coupons/${code}`)); toast("🗑 تم الحذف"); }
+    catch(e){toast("❌ "+e.message,"err");}
   };
 
-  window.deleteCoupon = async code => {
-    if (!confirm(`Ø­Ø°Ù Ø§ÙÙØ³ÙÙØ© "${code}"Ø`)) return;
-    try {
-      await remove(ref(db, `coupons/${code}`));
-      toast("ØªÙ Ø­Ø°Ù Ø§ÙÙØ³ÙÙØ© ðï¸");
-    } catch(e) { toast("Ø®Ø·Ø£: " + e.message, "err"); }
-  };
-
-  // ââ Create coupon âââââââââââââââââââââââââââââââââââââââââââââ
-  $("create-coupon-btn").addEventListener("click", async () => {
-    let code   = ($("new-coupon-code").value || "").trim().toUpperCase();
-    const reward = parseFloat($("new-coupon-reward").value);
-    if (!code) code = "ALPHA-" + Math.random().toString(36).slice(2,8).toUpperCase();
-    if (!reward || reward <= 0) { setMsg("coupon-create-msg", "Ø£Ø¯Ø®Ù ÙÙØ§ÙØ£Ø© ØµØ­ÙØ­Ø©", "err"); return; }
-    if (allCoupons[code]) { setMsg("coupon-create-msg", "ÙØ°Ø§ Ø§ÙÙÙØ¯ ÙÙØ¬ÙØ¯ Ø¨Ø§ÙÙØ¹Ù", "err"); return; }
-    try {
-      await set(ref(db, `coupons/${code}`), {
-        rewardAmount: reward, isActive: true,
-        createdAt: Date.now(), usedBy: {}
-      });
-      setMsg("coupon-create-msg", `â ØªÙ Ø¥ÙØ´Ø§Ø¡ Ø§ÙÙØ³ÙÙØ©: ${code} (+Î±${reward})`, "ok");
-      $("new-coupon-code").value   = "";
-      $("new-coupon-reward").value = "";
-      toast(`ØªÙ Ø¥ÙØ´Ø§Ø¡ Ø§ÙÙØ³ÙÙØ© ${code} â`);
-    } catch(e) { setMsg("coupon-create-msg", "â Ø®Ø·Ø£: " + e.message, "err"); }
-  });
-
-  // ââ Utility âââââââââââââââââââââââââââââââââââââââââââââââââââ
-  function escHtml(s) {
-    return String(s)
-      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  }
-  
-
-  // ════════════════════════════════════════════════════════════════
-  // PRICE CARDS SYSTEM
-  // ════════════════════════════════════════════════════════════════
-
+  // ── CARDS ─────────────────────────────────────────────────────
   let allCards = {};
-
-  // Live listener for cards
-  onValue(ref(db, "cards"), snap => {
-    allCards = {};
-    if (snap.exists()) snap.forEach(c => { allCards[c.key] = c.val(); });
-    renderCardsList();
-  });
-
-  // Set default datetime values (now → now+24h)
-  (function setDefaultTimes() {
-    const now   = new Date();
-    const end   = new Date(now.getTime() + 24 * 3600 * 1000);
-    const fmt   = d => d.toISOString().slice(0,16);
-    const si    = document.getElementById("card-start");
-    const ei    = document.getElementById("card-end");
-    if (si) si.value = fmt(now);
-    if (ei) ei.value = fmt(end);
-  })();
-
-  // Color config
   const CARD_COLORS = {
-    gold:   { bg: "linear-gradient(135deg,#1a1505,#2a2008)", border: "#f0b429", accent: "#f0b429", text: "#f0b429" },
-    blue:   { bg: "linear-gradient(135deg,#050d1a,#08163a)", border: "#00d4ff", accent: "#00d4ff", text: "#00d4ff" },
-    green:  { bg: "linear-gradient(135deg,#051a0d,#072a12)", border: "#22c55e", accent: "#22c55e", text: "#22c55e" },
-    purple: { bg: "linear-gradient(135deg,#120518,#1c0830)", border: "#a855f7", accent: "#a855f7", text: "#a855f7" },
-    red:    { bg: "linear-gradient(135deg,#1a0505,#2a0808)", border: "#ef4444", accent: "#ef4444", text: "#ef4444" },
+    gold:  {bg:"linear-gradient(135deg,#1a1505,#2a2008)",border:"#f0b429",accent:"#f0b429"},
+    blue:  {bg:"linear-gradient(135deg,#050d1a,#08163a)",border:"#00d4ff",accent:"#00d4ff"},
+    green: {bg:"linear-gradient(135deg,#051a0d,#072a12)",border:"#22c55e",accent:"#22c55e"},
+    purple:{bg:"linear-gradient(135deg,#120518,#1c0830)",border:"#a855f7",accent:"#a855f7"},
+    red:   {bg:"linear-gradient(135deg,#1a0505,#2a0808)",border:"#ef4444",accent:"#ef4444"},
   };
 
-  function buildCardHTML(card, cardId, isAdminView = true) {
-    const col    = CARD_COLORS[card.color || "gold"];
-    const now    = Date.now();
-    const start  = card.startTime || 0;
-    const end    = card.endTime   || Infinity;
-    const uses   = card.claimedBy ? Object.keys(card.claimedBy).length : 0;
-    const maxU   = card.maxUses || 0;
-    const isLive = card.isActive && now >= start && now <= end && (maxU === 0 || uses < maxU);
-    const timeLeft = end - now;
-    const tlStr  = timeLeft > 0 ? formatCardTime(timeLeft) : "منتهي";
-    const startStr = new Date(start).toLocaleString("ar-SA",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
-    const endStr   = new Date(end).toLocaleString("ar-SA",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
-
-    return `<div class="price-card ${isLive ? "live" : "inactive"}" data-id="${cardId}"
-      style="background:${col.bg};border-color:${col.border}">
-      <div class="pc-glow" style="background:radial-gradient(circle,${col.accent}22,transparent 70%)"></div>
-      <div class="pc-header">
-        <span class="pc-icon">${escHtml(card.icon || "🎁")}</span>
-        <div class="pc-status-wrap">
-          <span class="pc-status ${isLive?"live":"off"}">${isLive?"● مباشر":"◌ غير نشط"}</span>
-          ${isAdminView ? `<span class="pc-uses">${uses}${maxU>0?" / "+maxU:""} استخدام</span>` : ""}
-        </div>
-      </div>
-      <div class="pc-title" style="color:${col.text}">${escHtml(card.title||"بطاقة عرض")}</div>
-      <div class="pc-desc">${escHtml(card.description||"")}</div>
-      <div class="pc-reward" style="color:${col.accent}">+α ${(card.reward||0).toLocaleString("ar",{maximumFractionDigits:4})}</div>
-      ${isAdminView ? `
-      <div class="pc-time-row">
-        <span>⏱ ${startStr}</span><span>→</span><span>${endStr}</span>
-      </div>` : `
-      <div class="pc-timer" id="card-timer-${cardId}" style="color:${col.text}">
-        ${isLive ? "⏳ متبقي: " + tlStr : "⌛ " + tlStr}
-      </div>`}
-      ${isAdminView ? `
-      <div class="pc-admin-actions">
-        <button class="btn-action ${card.isActive?"btn-red":"btn-green"}"
-          style="padding:.35rem .8rem;font-size:.78rem"
-          onclick="toggleCard('${cardId}',${!card.isActive})">
-          ${card.isActive?"⏸ تعطيل":"▶ تفعيل"}
-        </button>
-        <button class="btn-action btn-blue"
-          style="padding:.35rem .8rem;font-size:.78rem"
-          onclick="editCard('${cardId}')">
-          ✏️ تعديل
-        </button>
-        <button class="btn-action btn-red"
-          style="padding:.35rem .8rem;font-size:.78rem"
-          onclick="deleteCard('${cardId}')">
-          🗑️ حذف
-        </button>
-      </div>` : `
-      <button class="pc-claim-btn" id="claim-card-${cardId}"
-        onclick="claimCard('${cardId}')"
-        ${isLive ? "" : "disabled"}>
-        ${isLive ? "🎁 احصل عليها الآن" : "غير متاحة"}
-      </button>`}
-    </div>`;
+  function setDefaultCardTimes() {
+    const now=new Date(), end=new Date(now.getTime()+86400000);
+    const fmt=d=>d.toISOString().slice(0,16);
+    const si=document.getElementById("card-start"), ei=document.getElementById("card-end");
+    if(si)si.value=fmt(now); if(ei)ei.value=fmt(end);
   }
 
-  function formatCardTime(ms) {
-    const s = Math.floor(ms / 1000);
-    if (s < 60)   return s + " ثانية";
-    if (s < 3600) return Math.floor(s/60) + " دقيقة";
-    if (s < 86400) return Math.floor(s/3600) + " ساعة";
-    return Math.floor(s/86400) + " يوم";
+  function listenCards() {
+    onValue(ref(db,"cards"), snap => {
+      allCards={};
+      if(snap.exists()) snap.forEach(c=>{allCards[c.key]=c.val();});
+      renderCardsList();
+    });
   }
-
-  // Preview
-  document.getElementById("preview-card-btn").addEventListener("click", () => {
-    const card = readCardForm();
-    const wrap = document.getElementById("card-preview-wrap");
-    const prev = document.getElementById("card-preview");
-    prev.innerHTML = buildCardHTML(card, "preview", true);
-    wrap.style.display = "block";
-  });
 
   function readCardForm() {
     return {
-      title:     document.getElementById("card-title").value || "بطاقة عرض",
-      description: document.getElementById("card-desc").value || "",
-      reward:    parseFloat(document.getElementById("card-reward").value) || 10,
-      icon:      document.getElementById("card-icon").value || "🎁",
-      color:     document.getElementById("card-color").value || "gold",
-      maxUses:   parseInt(document.getElementById("card-max-uses").value) || 0,
-      startTime: new Date(document.getElementById("card-start").value).getTime() || Date.now(),
-      endTime:   new Date(document.getElementById("card-end").value).getTime()   || (Date.now() + 86400000),
-      isActive:  true,
-      createdAt: Date.now(),
-      claimedBy: {}
+      title:       document.getElementById("card-title")?.value||"بطاقة عرض",
+      description: document.getElementById("card-desc")?.value||"",
+      reward:      parseFloat(document.getElementById("card-reward")?.value)||10,
+      icon:        document.getElementById("card-icon")?.value||"🎁",
+      color:       document.getElementById("card-color")?.value||"gold",
+      maxUses:     parseInt(document.getElementById("card-max-uses")?.value)||0,
+      startTime:   new Date(document.getElementById("card-start")?.value).getTime()||Date.now(),
+      endTime:     new Date(document.getElementById("card-end")?.value).getTime()||(Date.now()+86400000),
+      isActive:    true, createdAt:Date.now(), claimedBy:{}
     };
   }
 
-  // Create / Edit card — single merged handler
-    document.getElementById("create-card-btn").addEventListener("click", async function() {
-      const editId = this.dataset.editId;
-      const card   = readCardForm();
-      if (!card.title)  { setMsg("card-create-msg","أدخل عنوان البطاقة","err"); return; }
-      if (!card.reward) { setMsg("card-create-msg","أدخل مكافأة صحيحة","err"); return; }
-      if (card.endTime <= card.startTime) { setMsg("card-create-msg","وقت الانتهاء يجب أن يكون بعد وقت البداية","err"); return; }
-      if (editId) {
-        try {
-          await update(ref(db, `cards/${editId}`), {
-            title: card.title, description: card.description, reward: card.reward,
-            icon: card.icon, color: card.color, maxUses: card.maxUses,
-            startTime: card.startTime, endTime: card.endTime
-          });
-          setMsg("card-create-msg","✅ تم تحديث البطاقة بنجاح!","ok");
-          toast("تم تحديث البطاقة ✅");
-          this.textContent = "➕ إنشاء البطاقة";
-          delete this.dataset.editId;
-        } catch(e) { setMsg("card-create-msg","❌ خطأ: "+e.message,"err"); }
-      } else {
-        try {
-          const cardId = "card_" + Date.now();
-          await set(ref(db, `cards/${cardId}`), card);
-          setMsg("card-create-msg","✅ تم إنشاء البطاقة بنجاح!","ok");
-          toast("تم إنشاء البطاقة ✅");
-          document.getElementById("card-title").value    = "";
-          document.getElementById("card-desc").value     = "";
-          document.getElementById("card-reward").value   = "";
-          document.getElementById("card-icon").value     = "";
-          document.getElementById("card-max-uses").value = "0";
-          document.getElementById("card-preview-wrap").style.display = "none";
-        } catch(e) { setMsg("card-create-msg","❌ خطأ: "+e.message,"err"); }
-      }
-    });
+  document.getElementById("preview-card-btn")?.addEventListener("click", () => {
+    const card=readCardForm(), col=CARD_COLORS[card.color||"gold"];
+    const wrap=document.getElementById("card-preview-wrap");
+    if(!wrap)return;
+    wrap.style.display="block";
+    wrap.innerHTML=`<div class="price-card live" style="max-width:240px;background:${col.bg};border-color:${col.border}">
+      <div class="pc-header"><span class="pc-icon">${card.icon}</span><span class="pc-status live">● متاحة</span></div>
+      <div class="pc-title" style="color:${col.accent}">${escHtml(card.title)}</div>
+      <div class="pc-desc">${escHtml(card.description)}</div>
+      <div class="pc-reward" style="color:${col.accent}">+α${card.reward.toFixed(4)}</div>
+    </div>`;
+  });
 
-  // Delete card
-  window.deleteCard = async (cardId) => {
-    if (!confirm("حذف هذه البطاقة؟ لا يمكن التراجع.")) return;
-    try {
-      await remove(ref(db, `cards/${cardId}`));
-      toast("تم حذف البطاقة 🗑️");
-    } catch(e) { toast("خطأ: "+e.message,"err"); }
+  document.getElementById("create-card-btn")?.addEventListener("click", async function() {
+    const editId=this.dataset.editId;
+    const card=readCardForm();
+    if (!card.title){setMsg("card-create-msg","أدخل عنوان البطاقة","err");return;}
+    if (!card.reward){setMsg("card-create-msg","أدخل مكافأة صحيحة","err");return;}
+    if (card.endTime<=card.startTime){setMsg("card-create-msg","وقت الانتهاء يجب أن يكون بعد وقت البداية","err");return;}
+    if (editId) {
+      try {
+        await update(ref(db,`cards/${editId}`),{title:card.title,description:card.description,reward:card.reward,icon:card.icon,color:card.color,maxUses:card.maxUses,startTime:card.startTime,endTime:card.endTime});
+        setMsg("card-create-msg","✅ تم تحديث البطاقة!","ok"); toast("تم التحديث ✅");
+        cancelCardEdit();
+      } catch(e){setMsg("card-create-msg","❌ "+e.message,"err");}
+    } else {
+      try {
+        await set(ref(db,"cards/card_"+Date.now()),card);
+        setMsg("card-create-msg","✅ تم إنشاء البطاقة!","ok"); toast("تم إنشاء البطاقة ✅");
+        ["card-title","card-desc","card-reward","card-icon"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+        document.getElementById("card-max-uses").value="0";
+        document.getElementById("card-preview-wrap").style.display="none";
+      } catch(e){setMsg("card-create-msg","❌ "+e.message,"err");}
+    }
+  });
+
+  window.editCard = (cardId) => {
+    const c=allCards[cardId]; if(!c)return;
+    document.getElementById("card-title").value   =c.title||"";
+    document.getElementById("card-desc").value    =c.description||"";
+    document.getElementById("card-reward").value  =c.reward||"";
+    document.getElementById("card-icon").value    =c.icon||"🎁";
+    document.getElementById("card-color").value   =c.color||"gold";
+    document.getElementById("card-max-uses").value=c.maxUses||0;
+    const fmt=ts=>ts?new Date(ts).toISOString().slice(0,16):"";
+    document.getElementById("card-start").value=fmt(c.startTime);
+    document.getElementById("card-end").value  =fmt(c.endTime);
+    const btn=document.getElementById("create-card-btn");
+    btn.textContent="💾 تحديث البطاقة"; btn.dataset.editId=cardId;
+    document.getElementById("cancel-edit-btn").style.display="inline-flex";
+    document.getElementById("card-create-form-wrap")?.scrollIntoView({behavior:"smooth"});
+    setMsg("card-create-msg","عدّل البيانات ثم اضغط تحديث البطاقة","info");
+    showSection("cards");
   };
+
+  window.cancelCardEdit = () => {
+    const btn=document.getElementById("create-card-btn");
+    btn.textContent="➕ إنشاء البطاقة"; delete btn.dataset.editId;
+    document.getElementById("cancel-edit-btn").style.display="none";
+    setMsg("card-create-msg","","");
+  };
+
+  window.toggleCard = async (cardId,isActive) => {
+    try { await update(ref(db,`cards/${cardId}`),{isActive}); toast(isActive?"▶ تم التفعيل":"⏸ تم التعطيل"); }
+    catch(e){toast("❌ "+e.message,"err");}
+  };
+
+  window.deleteCard = async (cardId) => {
+    if (!confirm("حذف البطاقة نهائياً؟")) return;
+    try { await remove(ref(db,`cards/${cardId}`)); toast("🗑 تم حذف البطاقة"); }
+    catch(e){toast("❌ "+e.message,"err");}
+  };
+
+  function renderCardsList() {
+    const el=document.getElementById("cards-list"); if(!el)return;
+    const entries=Object.entries(allCards).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+    if(!entries.length){el.innerHTML="<div style='color:var(--text3);font-size:.85rem;padding:.8rem'>لا توجد بطاقات</div>";return;}
+    const now=Date.now();
+    el.innerHTML=entries.map(([id,c])=>{
+      const col=CARD_COLORS[c.color||"gold"];
+      const uses=c.claimedBy?Object.keys(c.claimedBy).length:0;
+      const maxU=c.maxUses||0;
+      const isLive=c.isActive&&now>=(c.startTime||0)&&now<=(c.endTime||Infinity)&&(maxU===0||uses<maxU);
+      const endStr=c.endTime?new Date(c.endTime).toLocaleString("ar-SA",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+      return `<div class="price-card ${isLive?"live":"inactive"}" style="background:${col.bg};border-color:${col.border};margin-bottom:.7rem">
+        <div class="pc-header">
+          <span class="pc-icon">${c.icon||"🎁"}</span>
+          <div class="pc-status-wrap">
+            <span class="pc-status ${isLive?"live":"off"}">${isLive?"● مباشر":"◌ غير نشط"}</span>
+            <span class="pc-uses">${uses}${maxU>0?" / "+maxU:""} استخدام</span>
+          </div>
+        </div>
+        <div class="pc-title" style="color:${col.accent}">${escHtml(c.title||"")}</div>
+        <div class="pc-reward" style="color:${col.accent}">+α${(c.reward||0).toFixed(4)}</div>
+        <div class="pc-time-row">⏰ ينتهي: ${endStr}</div>
+        <div class="pc-admin-actions">
+          <button class="btn-action ${c.isActive?"btn-red":"btn-green"}" style="padding:.3rem .7rem;font-size:.75rem"
+            onclick="toggleCard('${id}',${!c.isActive})">${c.isActive?"⏸ تعطيل":"▶ تفعيل"}</button>
+          <button class="btn-action btn-blue" style="padding:.3rem .7rem;font-size:.75rem"
+            onclick="editCard('${id}')">✏️ تعديل</button>
+          <button class="btn-action btn-red" style="padding:.3rem .7rem;font-size:.75rem"
+            onclick="deleteCard('${id}')">🗑️ حذف</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
   
