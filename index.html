@@ -2,108 +2,112 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>AlphaCoin Miner</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
 </head>
 <body>
-
 <div id="particles"></div>
 
 <div id="loading">
   <div class="spinner"></div>
-  <span style="color:#888;font-size:.9rem">جار التحميل…</span>
 </div>
 
 <div id="app">
 
-  <!-- ── AUTH ── -->
+  <!-- ══ AUTH ══ -->
   <div id="auth-screen">
-    <div class="logo-wrap">
-      <div class="logo-icon">⚡</div>
-      <div class="logo-title">AlphaCoin</div>
-      <div class="logo-sub">MINER</div>
+    <div class="auth-logo">
+      <div class="icon">⚡</div>
+      <div class="title">AlphaCoin</div>
+      <div class="sub">MINER</div>
     </div>
+
     <div class="auth-card">
-
-      <!-- Step 1: Phone number -->
-      <div id="step-phone">
-        <h2>أدخل رقم هاتفك</h2>
-        <p>سنرسل لك رمز تحقق عبر SMS</p>
-
-        <div class="phone-row">
-          <select class="inp" id="country-code" style="width:100px;flex-shrink:0;direction:ltr;text-align:center">
-            <option value="+966">🇸🇦 +966</option>
-            <option value="+971">🇦🇪 +971</option>
-            <option value="+965">🇰🇼 +965</option>
-            <option value="+973">🇧🇭 +973</option>
-            <option value="+974">🇶🇦 +974</option>
-            <option value="+968">🇴🇲 +968</option>
-            <option value="+967">🇾🇪 +967</option>
-            <option value="+962">🇯🇴 +962</option>
-            <option value="+963">🇸🇾 +963</option>
-            <option value="+964">🇮🇶 +964</option>
-            <option value="+961">🇱🇧 +961</option>
-            <option value="+20">🇪🇬 +20</option>
-            <option value="+212">🇲🇦 +212</option>
-            <option value="+213">🇩🇿 +213</option>
-            <option value="+216">🇹🇳 +216</option>
-            <option value="+1">🇺🇸 +1</option>
-            <option value="+44">🇬🇧 +44</option>
-            <option value="+49">🇩🇪 +49</option>
-            <option value="+33">🇫🇷 +33</option>
-            <option value="+7">🇷🇺 +7</option>
-            <option value="+90">🇹🇷 +90</option>
-            <option value="+92">🇵🇰 +92</option>
-            <option value="+91">🇮🇳 +91</option>
-          </select>
-          <input class="inp" id="phone-inp" type="tel" placeholder="5xxxxxxxx" style="direction:ltr;flex:1" inputmode="numeric" maxlength="15"/>
-        </div>
-
-        <button class="btn-gold" id="send-otp-btn" style="width:100%;margin-top:.8rem;padding:.85rem">
-          إرسال رمز التحقق
-        </button>
-        <div class="auth-msg" id="phone-msg"></div>
-        <div id="recaptcha-container"></div>
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" data-atab="login">تسجيل الدخول</button>
+        <button class="auth-tab-btn" data-atab="register">إنشاء حساب</button>
       </div>
 
-      <!-- Step 2: OTP -->
-      <div id="step-otp" style="display:none">
-        <div style="text-align:center;margin-bottom:1.2rem">
-          <div style="font-size:2.5rem">📱</div>
-          <h2 style="margin-top:.5rem">أدخل رمز التحقق</h2>
-          <p id="otp-hint" style="margin-top:.3rem">تم إرسال رمز SMS</p>
+      <!-- Login -->
+      <div id="atab-login" class="auth-form">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input class="inp" id="login-user" type="text" placeholder="username" autocomplete="username" autocapitalize="none" spellcheck="false"/>
         </div>
-
-        <div class="otp-boxes" id="otp-boxes">
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="0"/>
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="1"/>
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="2"/>
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="3"/>
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="4"/>
-          <input class="otp-inp" type="text" maxlength="1" inputmode="numeric" data-idx="5"/>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <div class="pass-wrap">
+            <input class="inp" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+            <button class="pass-toggle" data-target="login-pass" type="button">👁</button>
+          </div>
         </div>
-
-        <button class="btn-gold" id="verify-btn" style="width:100%;margin-top:1rem;padding:.85rem">
-          تحقق ودخول ⚡
-        </button>
-        <div class="auth-msg" id="otp-msg"></div>
-
-        <button id="back-btn" style="background:none;border:none;color:#888;font-size:.9rem;cursor:pointer;margin-top:.8rem;width:100%;text-align:center">
-          ← تغيير الرقم
-        </button>
+        <div class="auth-err" id="login-err"></div>
+        <button class="btn-submit" id="login-btn">دخول ⚡</button>
       </div>
 
+      <!-- Register -->
+      <div id="atab-register" class="auth-form" style="display:none">
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input class="inp" id="reg-user" type="text" placeholder="اختر اسم مستخدم" autocapitalize="none" spellcheck="false" autocomplete="username"/>
+        </div>
+        <div class="field">
+          <label>رقم الهاتف</label>
+          <div class="phone-row">
+            <select class="inp" id="reg-cc">
+              <option value="+966">🇸🇦 +966</option>
+              <option value="+971">🇦🇪 +971</option>
+              <option value="+965">🇰🇼 +965</option>
+              <option value="+973">🇧🇭 +973</option>
+              <option value="+974">🇶🇦 +974</option>
+              <option value="+968">🇴🇲 +968</option>
+              <option value="+967">🇾🇪 +967</option>
+              <option value="+962">🇯🇴 +962</option>
+              <option value="+964">🇮🇶 +964</option>
+              <option value="+963">🇸🇾 +963</option>
+              <option value="+961">🇱🇧 +961</option>
+              <option value="+20">🇪🇬 +20</option>
+              <option value="+212">🇲🇦 +212</option>
+              <option value="+213">🇩🇿 +213</option>
+              <option value="+216">🇹🇳 +216</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+90">🇹🇷 +90</option>
+              <option value="+92">🇵🇰 +92</option>
+              <option value="+91">🇮🇳 +91</option>
+            </select>
+            <input class="inp" id="reg-phone" type="tel" placeholder="5xxxxxxxx" inputmode="numeric" style="direction:ltr;flex:1"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <div class="pass-wrap">
+            <input class="inp" id="reg-pass" type="password" placeholder="8 أحرف على الأقل" autocomplete="new-password"/>
+            <button class="pass-toggle" data-target="reg-pass" type="button">👁</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>تأكيد كلمة المرور</label>
+          <div class="pass-wrap">
+            <input class="inp" id="reg-pass2" type="password" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password"/>
+            <button class="pass-toggle" data-target="reg-pass2" type="button">👁</button>
+          </div>
+        </div>
+        <div class="auth-err" id="reg-err"></div>
+        <button class="btn-submit" id="reg-btn">إنشاء الحساب</button>
+      </div>
     </div>
   </div>
 
-  <!-- ── MAIN APP ── -->
+  <!-- ══ MAIN ══ -->
   <div id="main-screen">
     <nav>
       <div class="nav-brand">⚡ AlphaCoin</div>
-      <div class="nav-user">
-        <span id="nav-name" style="font-size:.9rem"></span>
+      <div class="nav-right">
+        <span class="nav-username" id="nav-name"></span>
         <button class="btn-logout" id="btn-logout">خروج</button>
       </div>
     </nav>
@@ -114,38 +118,31 @@
       <button class="tab-btn" data-tab="profile">👤 حسابي</button>
     </div>
 
-    <!-- Mine Tab -->
+    <!-- Mine -->
     <div class="tab-content active" id="tab-mine">
       <div class="mine-section">
         <div class="balance-card">
           <div class="balance-label">رصيدك الحالي</div>
-          <div class="balance-amount">
-            <span class="balance-symbol">α</span>
-            <span id="balance-val">0.00</span>
-          </div>
+          <div class="balance-amount"><span class="balance-symbol">α</span><span id="balance-val">0.0000</span></div>
           <div class="balance-stats">
-            <span>إجمالي التعدين: <strong id="total-mined">0</strong></span>
+            <span>إجمالي: <strong id="total-mined">0</strong></span>
             <span>اليوم: <strong id="daily-count">0</strong>/50</span>
           </div>
         </div>
 
         <div class="mine-btn-wrap">
-          <button class="mine-btn" id="mine-btn">
-            ⛏<br>MINE
-          </button>
+          <button class="mine-btn" id="mine-btn">⛏<br>MINE</button>
           <div class="mine-ring"></div>
           <div class="mine-ring"></div>
           <div class="mine-ring"></div>
         </div>
 
-        <div class="mine-limit">
-          تبقى لك <span id="mines-left">50</span> عملية تعدين اليوم
-        </div>
+        <div class="mine-limit">تبقى لك <span id="mines-left">50</span> عملية اليوم</div>
 
         <div class="coupon-section">
           <h3>🎁 استبدال قسيمة</h3>
           <div class="coupon-input-row">
-            <input class="inp" id="coupon-inp" type="text" placeholder="أدخل كود القسيمة…" autocomplete="off" style="direction:ltr"/>
+            <input class="inp" id="coupon-inp" type="text" placeholder="كود القسيمة" style="direction:ltr"/>
             <button class="btn-gold" id="coupon-btn">تطبيق</button>
           </div>
           <div class="coupon-msg" id="coupon-msg"></div>
@@ -153,19 +150,14 @@
       </div>
     </div>
 
-    <!-- Leaderboard Tab -->
+    <!-- Leaderboard -->
     <div class="tab-content" id="tab-leaderboard">
       <div class="lb-section">
         <h2>🏆 لوحة المتصدرين</h2>
         <div style="overflow-x:auto">
           <table class="lb-table">
             <thead>
-              <tr>
-                <th>#</th>
-                <th>المستخدم</th>
-                <th>الرصيد (α)</th>
-                <th>إجمالي التعدين</th>
-              </tr>
+              <tr><th>#</th><th>المستخدم</th><th>الرصيد (α)</th><th>الإجمالي</th></tr>
             </thead>
             <tbody id="lb-body">
               <tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>
@@ -175,30 +167,18 @@
       </div>
     </div>
 
-    <!-- Profile Tab -->
+    <!-- Profile -->
     <div class="tab-content" id="tab-profile">
       <div class="profile-section">
         <div class="profile-card">
-          <div style="font-size:3.5rem;margin-bottom:.5rem">📱</div>
+          <div class="profile-avatar-icon">⚡</div>
           <h3 id="profile-name"></h3>
-          <div class="profile-email" id="profile-email"></div>
+          <div class="profile-sub" id="profile-phone"></div>
           <div class="profile-stats">
-            <div class="stat-box">
-              <div class="stat-val" id="profile-balance">0</div>
-              <div class="stat-lbl">الرصيد (α)</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val" id="profile-total">0</div>
-              <div class="stat-lbl">إجمالي التعدين</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val" id="profile-daily">0/50</div>
-              <div class="stat-lbl">عمليات اليوم</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-val" id="profile-rank">-</div>
-              <div class="stat-lbl">ترتيبك</div>
-            </div>
+            <div class="stat-box"><div class="stat-val" id="profile-balance">0</div><div class="stat-lbl">الرصيد (α)</div></div>
+            <div class="stat-box"><div class="stat-val" id="profile-total">0</div><div class="stat-lbl">إجمالي التعدين</div></div>
+            <div class="stat-box"><div class="stat-val" id="profile-daily">0/50</div><div class="stat-lbl">اليوم</div></div>
+            <div class="stat-box"><div class="stat-val" id="profile-rank">-</div><div class="stat-lbl">ترتيبك</div></div>
           </div>
         </div>
         <div id="admin-btn-wrap" style="display:none">
@@ -210,7 +190,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script type="module" src="script.js"></script>
 </body>
 </html>
