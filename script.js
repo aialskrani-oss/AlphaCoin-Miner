@@ -149,10 +149,6 @@ async function doRegister() {
   regBtn.textContent = "جار الإنشاء…";
 
   try {
-    // Check username uniqueness
-    const snap = await get(query(ref(db, "users"), orderByChild("username"), equalTo(username)));
-    if (snap.exists()) { setErr(regErr, "اسم المستخدم مستخدم بالفعل، اختر غيره"); regBtn.disabled = false; regBtn.textContent = "إنشاء الحساب"; return; }
-
     const cred = await createUserWithEmailAndPassword(auth, username + DOMAIN, password);
     await set(ref(db, `users/${cred.user.uid}`), {
       username, phone,
@@ -359,11 +355,12 @@ function authError(code) {
     "auth/user-not-found":          "اسم المستخدم غير موجود",
     "auth/wrong-password":          "كلمة المرور خاطئة",
     "auth/invalid-credential":      "اسم المستخدم أو كلمة المرور خاطئة",
-    "auth/email-already-in-use":    "اسم المستخدم مستخدم بالفعل",
+    "auth/email-already-in-use":    "اسم المستخدم مستخدم بالفعل، اختر غيره",
     "auth/weak-password":           "كلمة المرور ضعيفة (8 أحرف على الأقل)",
     "auth/too-many-requests":       "محاولات كثيرة، انتظر قليلاً",
     "auth/network-request-failed":  "خطأ في الاتصال، تحقق من الإنترنت",
     "auth/invalid-email":           "خطأ داخلي، تواصل مع الدعم",
+    "auth/operation-not-allowed":   "يجب تفعيل Email/Password في Firebase Console أولاً",
   };
-  return m[code] || "خطأ غير متوقع، حاول مرة أخرى";
+  return m[code] || `خطأ: ${code}`;
 }
