@@ -40,6 +40,18 @@
           }
         }
       }
+    },
+    "cards": {
+      ".read": "auth != null",
+      "$cardId": {
+        ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com'",
+        "claimedBy": {
+          ".write": "auth != null",
+          "$uid": {
+            ".validate": "auth.uid === $uid"
+          }
+        }
+      }
     }
   }
 }
