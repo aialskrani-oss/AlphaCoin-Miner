@@ -1,29 +1,37 @@
 import { auth, db, ADMIN_EMAIL } from "./firebase-config.js";
 import {
-  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  RecaptchaVerifier, signInWithPhoneNumber, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
-  ref, get, set, update, onValue, query, orderByChild, limitToLast
+  ref, get, set, update, onValue
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // ── DOM refs ──────────────────────────────────────────────────
-const loadingEl   = document.getElementById("loading");
-const authScreen  = document.getElementById("auth-screen");
-const mainScreen  = document.getElementById("main-screen");
-const btnLogin    = document.getElementById("btn-login");
-const btnLogout   = document.getElementById("btn-logout");
-const navAvatar   = document.getElementById("nav-avatar");
-const navName     = document.getElementById("nav-name");
-const balanceVal  = document.getElementById("balance-val");
-const totalMined  = document.getElementById("total-mined");
-const dailyCount  = document.getElementById("daily-count");
-const minesLeft   = document.getElementById("mines-left");
-const mineBtn     = document.getElementById("mine-btn");
-const couponInp   = document.getElementById("coupon-inp");
-const couponBtn   = document.getElementById("coupon-btn");
-const couponMsg   = document.getElementById("coupon-msg");
-const lbBody      = document.getElementById("lb-body");
-const profileAvatar = document.getElementById("profile-avatar");
+const loadingEl     = document.getElementById("loading");
+const authScreen    = document.getElementById("auth-screen");
+const mainScreen    = document.getElementById("main-screen");
+const stepPhone     = document.getElementById("step-phone");
+const stepOtp       = document.getElementById("step-otp");
+const countryCode   = document.getElementById("country-code");
+const phoneInp      = document.getElementById("phone-inp");
+const sendOtpBtn    = document.getElementById("send-otp-btn");
+const phoneMsg      = document.getElementById("phone-msg");
+const otpHint       = document.getElementById("otp-hint");
+const verifyBtn     = document.getElementById("verify-btn");
+const otpMsg        = document.getElementById("otp-msg");
+const backBtn       = document.getElementById("back-btn");
+const otpBoxes      = document.querySelectorAll(".otp-inp");
+const navName       = document.getElementById("nav-name");
+const btnLogout     = document.getElementById("btn-logout");
+const balanceVal    = document.getElementById("balance-val");
+const totalMined    = document.getElementById("total-mined");
+const dailyCount    = document.getElementById("daily-count");
+const minesLeft     = document.getElementById("mines-left");
+const mineBtn       = document.getElementById("mine-btn");
+const couponInp     = document.getElementById("coupon-inp");
+const couponBtn     = document.getElementById("coupon-btn");
+const couponMsg     = document.getElementById("coupon-msg");
+const lbBody        = document.getElementById("lb-body");
 const profileName   = document.getElementById("profile-name");
 const profileEmail  = document.getElementById("profile-email");
 const profileBal    = document.getElementById("profile-balance");
@@ -40,13 +48,7 @@ const toastEl       = document.getElementById("toast");
     const p = document.createElement("div");
     p.className = "particle";
     const size = Math.random() * 4 + 1;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random() * 100}%;
-      top:${Math.random() * 100 + 100}%;
-      animation-duration:${Math.random() * 15 + 10}s;
-      animation-delay:${Math.random() * 10}s;
-    `;
+    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100+100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
     container.appendChild(p);
   }
 })();
@@ -72,93 +74,171 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// ── Auth ───────────────────────────────────────────────────────
-let currentUser = null;
-let userData    = null;
+// ── State ──────────────────────────────────────────────────────
+let currentUser       = null;
+let userData          = null;
+let confirmationResult = null;
+let recaptchaVerifier  = null;
 
-btnLogin.addEventListener("click", () => {
-  btnLogin.disabled = true;
-  btnLogin.textContent = "جار فتح نافذة الدخول…";
+// ── reCAPTCHA setup ────────────────────────────────────────────
+function initRecaptcha() {
+  if (recaptchaVerifier) return;
+  recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+    size: "invisible",
+    callback: () => {},
+    "expired-callback": () => { recaptchaVerifier = null; }
+  });
+}
 
-  // Open auth page in a new top-level window (works outside iframe restrictions)
-  const w = 500, h = 600;
-  const left = Math.max(0, (screen.width  - w) / 2);
-  const top  = Math.max(0, (screen.height - h) / 2);
-  const authWin = window.open(
-    "auth.html",
-    "AlphaCoinAuth",
-    `width=${w},height=${h},left=${left},top=${top},resizable=no`
-  );
-
-  // Listen for success message from auth window
-  function onMessage(e) {
-    if (e.data && e.data.type === "AUTH_SUCCESS") {
-      window.removeEventListener("message", onMessage);
-      btnLogin.disabled = false;
-      btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
-      if (authWin && !authWin.closed) authWin.close();
+// ── OTP box UX ────────────────────────────────────────────────
+otpBoxes.forEach((box, idx) => {
+  box.addEventListener("input", () => {
+    box.value = box.value.replace(/\D/g, "").slice(-1);
+    box.classList.toggle("filled", box.value !== "");
+    if (box.value && idx < otpBoxes.length - 1) otpBoxes[idx + 1].focus();
+    if (getOtpCode().length === 6) verifyOtp();
+  });
+  box.addEventListener("keydown", e => {
+    if (e.key === "Backspace" && !box.value && idx > 0) {
+      otpBoxes[idx - 1].value = "";
+      otpBoxes[idx - 1].classList.remove("filled");
+      otpBoxes[idx - 1].focus();
     }
-  }
-  window.addEventListener("message", onMessage);
-
-  // Re-enable button if auth window is closed without logging in
-  const checkClosed = setInterval(() => {
-    if (!authWin || authWin.closed) {
-      clearInterval(checkClosed);
-      window.removeEventListener("message", onMessage);
-      btnLogin.disabled = false;
-      btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
-    }
-  }, 800);
+  });
+  box.addEventListener("paste", e => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, 6);
+    [...text].forEach((ch, i) => {
+      if (otpBoxes[i]) { otpBoxes[i].value = ch; otpBoxes[i].classList.add("filled"); }
+    });
+    if (text.length === 6) verifyOtp();
+    else if (otpBoxes[text.length]) otpBoxes[text.length].focus();
+  });
 });
 
-btnLogout.addEventListener("click", () => signOut(auth));
+function getOtpCode() {
+  return [...otpBoxes].map(b => b.value).join("");
+}
 
+function clearOtp() {
+  otpBoxes.forEach(b => { b.value = ""; b.classList.remove("filled"); });
+  otpBoxes[0].focus();
+}
+
+// ── Send OTP ───────────────────────────────────────────────────
+sendOtpBtn.addEventListener("click", sendOtp);
+phoneInp.addEventListener("keydown", e => { if (e.key === "Enter") sendOtp(); });
+
+async function sendOtp() {
+  const raw    = phoneInp.value.replace(/\D/g, "").replace(/^0+/, "");
+  const cc     = countryCode.value;
+  const number = cc + raw;
+
+  if (raw.length < 7) { setMsg(phoneMsg, "أدخل رقم هاتف صحيح", "err"); return; }
+
+  setMsg(phoneMsg, "");
+  sendOtpBtn.disabled = true;
+  sendOtpBtn.textContent = "جار الإرسال…";
+
+  try {
+    initRecaptcha();
+    confirmationResult = await signInWithPhoneNumber(auth, number, recaptchaVerifier);
+    otpHint.textContent = `تم إرسال رمز SMS إلى ${number}`;
+    stepPhone.style.display = "none";
+    stepOtp.style.display   = "block";
+    otpBoxes[0].focus();
+    setMsg(otpMsg, "");
+  } catch (e) {
+    recaptchaVerifier = null;
+    setMsg(phoneMsg, friendlyError(e.code), "err");
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.textContent = "إرسال رمز التحقق";
+  }
+}
+
+// ── Verify OTP ─────────────────────────────────────────────────
+verifyBtn.addEventListener("click", verifyOtp);
+
+async function verifyOtp() {
+  const code = getOtpCode();
+  if (code.length < 6) { setMsg(otpMsg, "أدخل الرمز المكون من 6 أرقام", "err"); return; }
+  if (!confirmationResult) { setMsg(otpMsg, "أرسل الرمز أولاً", "err"); return; }
+
+  setMsg(otpMsg, "");
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = "جار التحقق…";
+
+  try {
+    await confirmationResult.confirm(code);
+    // onAuthStateChanged will handle the rest
+  } catch (e) {
+    setMsg(otpMsg, friendlyError(e.code), "err");
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = "تحقق ودخول ⚡";
+    clearOtp();
+  }
+}
+
+// ── Back button ────────────────────────────────────────────────
+backBtn.addEventListener("click", () => {
+  stepOtp.style.display   = "none";
+  stepPhone.style.display = "block";
+  sendOtpBtn.disabled     = false;
+  sendOtpBtn.textContent  = "إرسال رمز التحقق";
+  setMsg(phoneMsg, "");
+  confirmationResult = null;
+  recaptchaVerifier  = null;
+});
+
+// ── Auth state ─────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   loadingEl.style.display = "none";
   if (user) {
     currentUser = user;
-    authScreen.style.display  = "none";
-    mainScreen.style.display  = "flex";
-    navAvatar.src  = user.photoURL || "";
-    navName.textContent = user.displayName || user.email;
+    authScreen.style.display = "none";
+    mainScreen.style.display = "flex";
+    // Reset steps for next logout
+    stepPhone.style.display = "block";
+    stepOtp.style.display   = "none";
+    sendOtpBtn.disabled     = false;
+    sendOtpBtn.textContent  = "إرسال رمز التحقق";
+    navName.textContent     = user.phoneNumber || user.displayName || "مستخدم";
     await ensureUserRecord(user);
     listenUserData(user.uid);
   } else {
     currentUser = null;
     userData    = null;
-    authScreen.style.display  = "flex";
-    mainScreen.style.display  = "none";
+    authScreen.style.display = "flex";
+    mainScreen.style.display = "none";
   }
 });
+
+btnLogout.addEventListener("click", () => signOut(auth));
 
 // ── User record ────────────────────────────────────────────────
 async function ensureUserRecord(user) {
   const userRef = ref(db, `users/${user.uid}`);
   const snap = await get(userRef);
+  const phone = user.phoneNumber || "";
   if (!snap.exists()) {
     await set(userRef, {
-      email: user.email,
-      name: user.displayName || "",
-      photoURL: user.photoURL || "",
+      phone,
+      name: phone,
+      email: "",
+      photoURL: "",
       balance: 0,
       totalMined: 0,
       lastMineDate: "",
       dailyMineCount: 0
     });
   } else {
-    await update(userRef, {
-      email: user.email,
-      name: user.displayName || "",
-      photoURL: user.photoURL || ""
-    });
+    await update(userRef, { phone });
   }
 }
 
 // ── Live user data ─────────────────────────────────────────────
 function listenUserData(uid) {
-  const userRef = ref(db, `users/${uid}`);
-  onValue(userRef, snap => {
+  onValue(ref(db, `users/${uid}`), snap => {
     if (!snap.exists()) return;
     userData = snap.val();
     const todayKey = todayStr();
@@ -170,10 +250,11 @@ function listenUserData(uid) {
     totalMined.textContent = (userData.totalMined || 0).toFixed(4);
     dailyCount.textContent = count;
     minesLeft.textContent  = Math.max(0, left);
-    mineBtn.disabled = left <= 0;
+    mineBtn.disabled       = left <= 0;
 
     if (adminBtnWrap) {
-      adminBtnWrap.style.display = (userData.email === ADMIN_EMAIL) ? "block" : "none";
+      const isAdmin = userData.phone === "+966500000000" || userData.email === ADMIN_EMAIL;
+      adminBtnWrap.style.display = isAdmin ? "block" : "none";
     }
   });
 }
@@ -189,26 +270,23 @@ mineBtn.addEventListener("click", async () => {
   if (!currentUser || !userData) return;
   mineBtn.disabled = true;
 
-  const todayKey   = todayStr();
-  const sameDay    = userData.lastMineDate === todayKey;
-  const dailyC     = sameDay ? (userData.dailyMineCount || 0) : 0;
+  const todayKey = todayStr();
+  const sameDay  = userData.lastMineDate === todayKey;
+  const dailyC   = sameDay ? (userData.dailyMineCount || 0) : 0;
 
   if (dailyC >= 50) {
     showToast("لقد وصلت للحد اليومي (50 عملية)", "err");
     return;
   }
 
-  const reward = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
-  const newBal  = parseFloat(((userData.balance || 0) + reward).toFixed(4));
+  const reward   = parseFloat((Math.random() * 0.9 + 0.1).toFixed(4));
+  const newBal   = parseFloat(((userData.balance || 0) + reward).toFixed(4));
   const newTotal = parseFloat(((userData.totalMined || 0) + reward).toFixed(4));
-  const newCount = dailyC + 1;
 
   try {
     await update(ref(db, `users/${currentUser.uid}`), {
-      balance: newBal,
-      totalMined: newTotal,
-      lastMineDate: todayKey,
-      dailyMineCount: newCount
+      balance: newBal, totalMined: newTotal,
+      lastMineDate: todayKey, dailyMineCount: dailyC + 1
     });
     spawnFloatReward(`+α${reward.toFixed(4)}`);
     showToast(`تم التعدين! حصلت على α${reward.toFixed(4)}`);
@@ -220,11 +298,11 @@ mineBtn.addEventListener("click", async () => {
 
 function spawnFloatReward(text) {
   const el = document.createElement("div");
-  el.className = "float-reward";
+  el.className   = "float-reward";
   el.textContent = text;
   const rect = mineBtn.getBoundingClientRect();
-  el.style.left = (rect.left + rect.width / 2 - 60) + "px";
-  el.style.top  = (rect.top - 10) + "px";
+  el.style.left  = (rect.left + rect.width / 2 - 60) + "px";
+  el.style.top   = (rect.top - 10) + "px";
   document.body.appendChild(el);
   el.addEventListener("animationend", () => el.remove());
 }
@@ -242,22 +320,17 @@ async function redeemCoupon() {
   setCouponMsg("جار التحقق…", "");
 
   try {
-    const cpRef  = ref(db, `coupons/${code}`);
-    const snap   = await get(cpRef);
-
+    const cpRef = ref(db, `coupons/${code}`);
+    const snap  = await get(cpRef);
     if (!snap.exists()) { setCouponMsg("القسيمة غير موجودة", "err"); return; }
-
     const cp = snap.val();
     if (!cp.isActive) { setCouponMsg("هذه القسيمة غير نشطة", "err"); return; }
-
     const usedBy = cp.usedBy ? Object.values(cp.usedBy) : [];
     if (usedBy.includes(currentUser.uid)) { setCouponMsg("لقد استخدمت هذه القسيمة من قبل", "err"); return; }
 
-    const newUsedBy = [...usedBy, currentUser.uid];
     const newBal = parseFloat(((userData.balance || 0) + cp.rewardAmount).toFixed(4));
-
     await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
-    await update(cpRef, { usedBy: newUsedBy });
+    await update(cpRef, { usedBy: [...usedBy, currentUser.uid] });
 
     setCouponMsg(`تم! حصلت على α${cp.rewardAmount} 🎉`, "ok");
     couponInp.value = "";
@@ -278,27 +351,20 @@ function setCouponMsg(msg, type) {
 async function loadLeaderboard() {
   lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">جار التحميل…</td></tr>`;
   try {
-    const usersRef = ref(db, "users");
-    const snap = await get(usersRef);
+    const snap = await get(ref(db, "users"));
     if (!snap.exists()) { lbBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#555">لا يوجد مستخدمون بعد</td></tr>`; return; }
-
     const users = [];
-    snap.forEach(child => users.push({ uid: child.key, ...child.val() }));
+    snap.forEach(c => users.push({ uid: c.key, ...c.val() }));
     users.sort((a, b) => (b.balance || 0) - (a.balance || 0));
-
     lbBody.innerHTML = users.map((u, i) => {
-      const rank    = i + 1;
-      const rankCls = rank === 1 ? "r1" : rank === 2 ? "r2" : rank === 3 ? "r3" : "";
-      const isYou   = currentUser && u.uid === currentUser.uid;
-      const medal   = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      const rank  = i + 1;
+      const cls   = rank === 1 ? "r1" : rank === 2 ? "r2" : rank === 3 ? "r3" : "";
+      const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+      const isYou = currentUser && u.uid === currentUser.uid;
+      const label = u.name || u.phone || "مجهول";
       return `<tr class="${isYou ? "lb-you" : ""}">
-        <td><span class="lb-rank ${rankCls}">${medal}</span></td>
-        <td>
-          <div class="lb-name-cell">
-            <img class="lb-avatar" src="${u.photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(u.name || "?")}">
-            ${u.name || "مجهول"} ${isYou ? "<span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}
-          </div>
-        </td>
+        <td><span class="lb-rank ${cls}">${medal}</span></td>
+        <td><div class="lb-name-cell"><span style="font-size:1.4rem">📱</span> ${label} ${isYou ? "<span style='color:var(--gold);font-size:.75rem'>(أنت)</span>" : ""}</div></td>
         <td><span class="lb-balance">α${(u.balance || 0).toFixed(4)}</span></td>
         <td style="color:#888">α${(u.totalMined || 0).toFixed(4)}</td>
       </tr>`;
@@ -311,17 +377,13 @@ async function loadLeaderboard() {
 // ── Profile ────────────────────────────────────────────────────
 async function loadProfile() {
   if (!currentUser || !userData) return;
-  profileAvatar.src   = currentUser.photoURL || "";
-  profileName.textContent  = userData.name || currentUser.displayName || "";
-  profileEmail.textContent = userData.email || "";
+  profileName.textContent  = userData.name  || currentUser.phoneNumber || "";
+  profileEmail.textContent = currentUser.phoneNumber || "";
   profileBal.textContent   = (userData.balance || 0).toFixed(4);
   profileTotal.textContent = (userData.totalMined || 0).toFixed(4);
-
   const todayKey = todayStr();
-  const sameDay  = userData.lastMineDate === todayKey;
-  const count    = sameDay ? (userData.dailyMineCount || 0) : 0;
+  const count = userData.lastMineDate === todayKey ? (userData.dailyMineCount || 0) : 0;
   profileDaily.textContent = `${count}/50`;
-
   try {
     const snap = await get(ref(db, "users"));
     if (snap.exists()) {
@@ -332,4 +394,23 @@ async function loadProfile() {
       profileRank.textContent = idx >= 0 ? `#${idx + 1}` : "-";
     }
   } catch {}
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function setMsg(el, msg, type = "") {
+  el.textContent = msg;
+  el.className   = "auth-msg " + type;
+}
+
+function friendlyError(code) {
+  const map = {
+    "auth/invalid-phone-number":       "رقم الهاتف غير صحيح",
+    "auth/too-many-requests":          "محاولات كثيرة، انتظر قليلاً",
+    "auth/invalid-verification-code":  "رمز التحقق خاطئ",
+    "auth/code-expired":               "انتهت صلاحية الرمز، أعد الإرسال",
+    "auth/missing-phone-number":       "أدخل رقم الهاتف",
+    "auth/quota-exceeded":             "تجاوزت الحد المسموح، حاول لاحقاً",
+    "auth/captcha-check-failed":       "فشل التحقق، أعد المحاولة",
+  };
+  return map[code] || "خطأ: " + code;
 }
