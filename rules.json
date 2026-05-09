@@ -74,11 +74,12 @@
     "referrals": {
       ".read": "auth != null",
       "$code": {
-        ".write": "auth != null",
+        ".write": "auth != null && (newData.child('ownerUid').val() === auth.uid || auth.token.email === 'aialskrani@gmail.com')",
         ".validate": "newData.hasChildren(['ownerUid','ownerName'])",
         "usedBy": {
           "$uid": {
-            ".validate": "auth.uid === $uid && newData.val() === true"
+            ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
+            ".validate": "(auth.uid === $uid && newData.val() === true) || auth.token.email === 'aialskrani@gmail.com'"
           }
         }
       }
