@@ -201,8 +201,13 @@ import { auth, db } from "./firebase-config.js";
 
   // ── Daily bonus ──────────────────────────────────────────────────
   async function checkDailyBonus() {
-    if (!currentUser || !userData) {
-      await new Promise(r => setTimeout(r, 1000));
+    if (!currentUser) return;
+    if (!userData) {
+      let waited = 0;
+      while (!userData && waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        waited += 200;
+      }
       if (!userData) return;
     }
     const today     = new Date().toISOString().slice(0,10);
@@ -338,23 +343,46 @@ import { auth, db } from "./firebase-config.js";
       claimBtn.disabled = pending <= 0;
       claimBtn.style.opacity = pending > 0 ? "1" : "0.5";
     }
+    // Update stats row (power & duration)
+    const elStatPower = document.getElementById("stat-power");
+    const elStatDur   = document.getElementById("stat-duration");
+    if (elStatPower) elStatPower.textContent = (userData.miningPower || 1) + " α/س";
+    if (elStatDur) {
+      const h = userData.maxMiningDuration || 1;
+      elStatDur.textContent = h >= 24
+        ? Math.round(h / 24) + " يوم"
+        : h + (h === 1 ? " ساعة" : " ساعات");
+    }
   }
 
   let isClaiming = false;
   async function claimMining() {
     if (!currentUser || !userData || isClaiming) return;
-    const pending = getMiningPending();
-    if (pending <= 0) { showToast("لا يوجد رصيد لجمعه بعد", "err"); return; }
     isClaiming = true;
     const claimBtn = document.getElementById("claim-btn");
     if (claimBtn) { claimBtn.disabled = true; claimBtn.textContent = "جار الجمع…"; }
+    let claimedAmount = 0;
     try {
-      await runTransaction(ref(db, `users/${currentUser.uid}/balance`), bal =>
-        Math.round(((bal||0) + pending) * 1e6) / 1e6
-      );
-      await update(ref(db, `users/${currentUser.uid}`), { lastClaimTime: Date.now() });
-      spawnRewardBurst(pending);
-      showToast(`+α${pending.toFixed(6)} تم الجمع! 🎉`);
+      const txResult = await runTransaction(ref(db, `users/${currentUser.uid}`), user => {
+        if (!user) return user;
+        const start   = user.lastClaimTime || user.miningStartTime || 0;
+        const maxMs   = (user.maxMiningDuration || 1) * 3600 * 1000;
+        const elapsed = Math.min(Date.now() - start, maxMs);
+        const pending = Math.round(((user.miningPower || 1) * elapsed / 3600000) * 1e6) / 1e6;
+        if (pending <= 0) return; // abort
+        claimedAmount = pending;
+        return {
+          ...user,
+          balance:       Math.round(((user.balance || 0) + pending) * 1e6) / 1e6,
+          lastClaimTime: Date.now(),
+        };
+      });
+      if (!txResult.committed || claimedAmount <= 0) {
+        showToast("لا يوجد رصيد لجمعه بعد", "err");
+        return;
+      }
+      spawnRewardBurst(claimedAmount);
+      showToast(`+α${claimedAmount.toFixed(6)} تم الجمع! 🎉`);
     } catch(e) {
       showToast("خطأ: " + e.message, "err");
     } finally {
@@ -379,6 +407,12 @@ import { auth, db } from "./firebase-config.js";
       const s = userData.streak || 0;
       elStreak.textContent = s > 0 ? "🔥 " + s : "";
       elStreak.style.display = s > 0 ? "inline-block" : "none";
+    }
+    // Streak badge in earn tab
+    const elStreakEarn = document.getElementById("streak-badge-earn");
+    if (elStreakEarn) {
+      const s = userData.streak || 0;
+      elStreakEarn.textContent = s > 0 ? "🔥 " + s : "";
     }
     // Referral code display
     const elRef = document.getElementById("referral-code-display");
@@ -460,17 +494,23 @@ import { auth, db } from "./firebase-config.js";
     if (!currentUser || !userData || isBuying) return;
     const list = type === "power" ? POWER_UPGRADES : DURATION_UPGRADES;
     const upg  = list.find(u => u.level === level);
-    if (!upg || upg.cost > (userData.balance||0)) { showToast("رصيد غير كافٍ","err"); return; }
+    if (!upg) return;
     isBuying = true;
     try {
-      const updates = { [`${type==="power"?"miningPowerLevel":"miningDurationLevel"}`]: level };
-      if (type === "power") updates.miningPower = upg.power;
-      else updates.maxMiningDuration = upg.hours;
-      await runTransaction(ref(db, `users/${currentUser.uid}/balance`), bal => {
-        if ((bal||0) < upg.cost) return; // abort
-        return Math.round(((bal||0) - upg.cost) * 1e6) / 1e6;
+      const txResult = await runTransaction(ref(db, `users/${currentUser.uid}`), user => {
+        if (!user) return user;
+        if ((user.balance || 0) < upg.cost) return; // abort — insufficient balance
+        const patch = { balance: Math.round(((user.balance || 0) - upg.cost) * 1e6) / 1e6 };
+        if (type === "power") {
+          patch.miningPowerLevel = level;
+          patch.miningPower      = upg.power;
+        } else {
+          patch.miningDurationLevel = level;
+          patch.maxMiningDuration   = upg.hours;
+        }
+        return { ...user, ...patch };
       });
-      await update(ref(db, `users/${currentUser.uid}`), updates);
+      if (!txResult.committed) { showToast("رصيد غير كافٍ","err"); return; }
       showToast("✅ تم الترقية بنجاح!");
     } catch(e) { showToast("خطأ: "+e.message,"err"); }
     finally { isBuying = false; }
