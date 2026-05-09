@@ -3,18 +3,18 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth
 import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDU1VlmzIYRqCjrH-kr-qg10pU4dfx7bfs",
-  authDomain: "aiph-acon.firebaseapp.com",
-  databaseURL: "https://aiph-acon-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "aiph-acon",
-  storageBucket: "aiph-acon.firebasestorage.app",
-  messagingSenderId: "260450986761",
-  appId: "1:260450986761:web:6a33ade232f9831a30a768"
+  apiKey: "AIzaSyDIsEEXCafhtSizdUHkM6BKaCuTdMH1KUQ",
+  authDomain: "alphacoin-27d62.firebaseapp.com",
+  databaseURL: "https://alphacoin-27d62-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "alphacoin-27d62",
+  storageBucket: "alphacoin-27d62.firebasestorage.app",
+  messagingSenderId: "264895286078",
+  appId: "1:264895286078:web:bae0b3cf7096499637ba6f"
 };
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db   = getDatabase(app);
 
-// اسم مستخدم الأدمن — تغييره حسب ما تريد
+// اسم مستخدم الأدمن
 export const ADMIN_USERNAME = "alpha_admin";
