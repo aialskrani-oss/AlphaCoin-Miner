@@ -2,17 +2,17 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
         ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'aialskrani@gmail.com')",
         ".validate": "newData.hasChildren(['username','balance'])",
         "balance": {
-          ".validate": "newData.isNumber() && newData.val() >= 0 || auth.token.email === 'aialskrani@gmail.com'"
+          ".validate": "newData.isNumber() && (newData.val() >= 0 && newData.val() <= 10000000) || auth.token.email === 'aialskrani@gmail.com'"
         },
         "miningPower": {
-          ".validate": "newData.isNumber() && newData.val() >= 1 || auth.token.email === 'aialskrani@gmail.com'"
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 20 || auth.token.email === 'aialskrani@gmail.com'"
         },
         "maxMiningDuration": {
-          ".validate": "newData.isNumber() && newData.val() >= 1 || auth.token.email === 'aialskrani@gmail.com'"
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 72 || auth.token.email === 'aialskrani@gmail.com'"
         },
         "miningPowerLevel": {
           ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5 || auth.token.email === 'aialskrani@gmail.com'"
@@ -25,6 +25,24 @@
         },
         "lastClaimTime": {
           ".validate": "newData.isNumber() || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "streak": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 365 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "lastLoginDate": {
+          ".validate": "newData.isString() || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "referralCode": {
+          ".validate": "newData.isString() && newData.val().length >= 4 || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "referredBy": {
+          ".validate": "newData.isString() || auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "isBanned": {
+          ".validate": "auth.token.email === 'aialskrani@gmail.com'"
+        },
+        "banReason": {
+          ".validate": "auth.token.email === 'aialskrani@gmail.com'"
         }
       },
       ".read": "auth != null && auth.token.email === 'aialskrani@gmail.com'"
@@ -36,7 +54,7 @@
         "usedBy": {
           ".write": "auth != null",
           "$uid": {
-            ".validate": "auth.uid === $uid"
+            ".validate": "auth.uid === $uid && newData.val() === true"
           }
         }
       }
@@ -48,10 +66,30 @@
         "claimedBy": {
           ".write": "auth != null",
           "$uid": {
-            ".validate": "auth.uid === $uid"
+            ".validate": "auth.uid === $uid && newData.val() === true"
           }
         }
       }
+    },
+    "referrals": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['ownerUid','ownerName'])",
+        "usedBy": {
+          "$uid": {
+            ".validate": "auth.uid === $uid && newData.val() === true"
+          }
+        }
+      }
+    },
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com'"
+    },
+    "leaderboard": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email === 'aialskrani@gmail.com'"
     }
   }
 }
