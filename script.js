@@ -104,9 +104,13 @@ import { auth, db, ADMIN_USERNAME } from "./firebase-config.js";
   });
 
   // ── Handle redirect result ─────────────────────────────────────
-  getRedirectResult(auth).catch(e => {
+  getRedirectResult(auth).then(result => {
+    // Result handled by onAuthStateChanged — nothing to do here
+  }).catch(e => {
+    // Silently ignore "no pending redirect" (normal on fresh load)
+    // For real errors, log to console only — don't scare the user
     if (e.code !== "auth/no-redirect-operation") {
-      authErr && (authErr.textContent = "خطأ في الدخول: " + e.message);
+      console.warn("Redirect result error:", e.code, e.message);
     }
   });
 
