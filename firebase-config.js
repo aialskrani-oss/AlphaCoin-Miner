@@ -16,3 +16,4 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 export const ADMIN_EMAIL = "aialskrani@gmail.com";
+export const ADMIN_PHONE = "PENDING";
