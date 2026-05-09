@@ -3,7 +3,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth
 import { getDatabase } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDU1VImzIYrQcJrh-K-r-qg10pU4dfx7bfs",
+  apiKey: "AIzaSyDU1VlmzIYRqCjrH-kr-qg10pU4dfx7bfs",
   authDomain: "aiph-acon.firebaseapp.com",
   databaseURL: "https://aiph-acon-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "aiph-acon",
