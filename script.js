@@ -13,22 +13,22 @@ import { auth, db } from "./firebase-config.js";
 
   const ADMIN_EMAIL = "aialskrani@gmail.com";
 
-  // Ã¢ÂÂÃ¢ÂÂ Upgrade configs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Upgrade configs âââââââââââââââââââââââââââââââââââââââââââ
   const POWER_UPGRADES = [
-    { level: 1, power: 1,  label: "1 ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  perSec: (1/3600),  cost: 0 },
-    { level: 2, power: 2,  label: "2 ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  perSec: (2/3600),  cost: 100 },
-    { level: 3, power: 3,  label: "3 ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  perSec: (3/3600),  cost: 300 },
-    { level: 4, power: 5,  label: "5 ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  perSec: (5/3600),  cost: 800 },
-    { level: 5, power: 8,  label: "8 ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  perSec: (8/3600),  cost: 2000 }
+    { level: 1, power: 1,  label: "1 Î±/Ø³Ø§Ø¹Ø©",  perSec: (1/3600),  cost: 0 },
+    { level: 2, power: 2,  label: "2 Î±/Ø³Ø§Ø¹Ø©",  perSec: (2/3600),  cost: 100 },
+    { level: 3, power: 3,  label: "3 Î±/Ø³Ø§Ø¹Ø©",  perSec: (3/3600),  cost: 300 },
+    { level: 4, power: 5,  label: "5 Î±/Ø³Ø§Ø¹Ø©",  perSec: (5/3600),  cost: 800 },
+    { level: 5, power: 8,  label: "8 Î±/Ø³Ø§Ø¹Ø©",  perSec: (8/3600),  cost: 2000 }
   ];
   const DURATION_UPGRADES = [
-    { level: 1, hours: 3,  label: "3 ÃÂ³ÃÂ§ÃÂ¹ÃÂ§ÃÂª",  cost: 0 },
-    { level: 2, hours: 6,  label: "6 ÃÂ³ÃÂ§ÃÂ¹ÃÂ§ÃÂª",  cost: 200 },
-    { level: 3, hours: 12, label: "12 ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  cost: 600 },
-    { level: 4, hours: 24, label: "24 ÃÂ³ÃÂ§ÃÂ¹ÃÂ©",  cost: 1500 }
+    { level: 1, hours: 3,  label: "3 Ø³Ø§Ø¹Ø§Øª",  cost: 0 },
+    { level: 2, hours: 6,  label: "6 Ø³Ø§Ø¹Ø§Øª",  cost: 200 },
+    { level: 3, hours: 12, label: "12 Ø³Ø§Ø¹Ø©",  cost: 600 },
+    { level: 4, hours: 24, label: "24 Ø³Ø§Ø¹Ø©",  cost: 1500 }
   ];
 
-  // Ã¢ÂÂÃ¢ÂÂ DOM refs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ DOM refs ââââââââââââââââââââââââââââââââââââââââââââââââââ
   const $ = id => document.getElementById(id);
   const loadingEl      = $("loading");
   const authScreen     = $("auth-screen");
@@ -47,7 +47,7 @@ import { auth, db } from "./firebase-config.js";
   const redeemBtn      = $("redeem-btn");
   const couponMsgEl    = $("coupon-msg");
 
-  // Ã¢ÂÂÃ¢ÂÂ Particles Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Particles âââââââââââââââââââââââââââââââââââââââââââââââââ
   (function () {
     const c = $("particles");
     for (let i = 0; i < 26; i++) {
@@ -59,7 +59,7 @@ import { auth, db } from "./firebase-config.js";
     }
   })();
 
-  // Ã¢ÂÂÃ¢ÂÂ Toast Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Toast ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   let toastTimer;
   function showToast(msg, type = "ok") {
     toastEl.textContent = msg;
@@ -68,7 +68,7 @@ import { auth, db } from "./firebase-config.js";
     toastTimer = setTimeout(() => (toastEl.className = "toast"), 3000);
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Tabs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Tabs âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -81,7 +81,7 @@ import { auth, db } from "./firebase-config.js";
     });
   });
 
-  // Ã¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   let currentUser  = null;
   let userData     = null;
   let miningTimer  = null;
@@ -89,7 +89,7 @@ import { auth, db } from "./firebase-config.js";
   const googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({ prompt: "select_account" });
 
-  // Ã¢ÂÂÃ¢ÂÂ Auth Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Auth âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   onAuthStateChanged(auth, async user => {
     loadingEl.style.display = "none";
     if (user) {
@@ -112,7 +112,7 @@ import { auth, db } from "./firebase-config.js";
 
   googleLoginBtn.addEventListener("click", async () => {
     googleLoginBtn.disabled = true;
-    googleLoginBtn.textContent = "ÃÂ¬ÃÂ§ÃÂ± ÃÂ§ÃÂÃÂ¯ÃÂ®ÃÂÃÂÃ¢ÂÂ¦";
+    googleLoginBtn.textContent = "Ø¬Ø§Ø± Ø§ÙØ¯Ø®ÙÙâ¦";
     authErr.textContent = "";
     try {
       await setPersistence(auth, browserLocalPersistence);
@@ -125,22 +125,22 @@ import { auth, db } from "./firebase-config.js";
 
   function resetLoginBtn() {
     googleLoginBtn.disabled = false;
-    googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/> ÃÂ§ÃÂÃÂ¯ÃÂ®ÃÂÃÂ ÃÂ¨ÃÂ­ÃÂ³ÃÂ§ÃÂ¨ Google`;
+    googleLoginBtn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="22"/> Ø§ÙØ¯Ø®ÙÙ Ø¨Ø­Ø³Ø§Ø¨ Google`;
   }
 
   function getErrMsg(e) {
     return ({
-      "auth/popup-closed-by-user":    "ÃÂ£ÃÂÃÂºÃÂÃÂÃÂª ÃÂÃÂ§ÃÂÃÂ°ÃÂ© ÃÂ§ÃÂÃÂ¯ÃÂ®ÃÂÃÂ Ã¢ÂÂ ÃÂ­ÃÂ§ÃÂÃÂ ÃÂÃÂ±ÃÂ© ÃÂ£ÃÂ®ÃÂ±ÃÂ",
-      "auth/popup-blocked":           "ÃÂ§ÃÂÃÂÃÂªÃÂµÃÂÃÂ­ ÃÂ­ÃÂ¬ÃÂ¨ ÃÂ§ÃÂÃÂÃÂ§ÃÂÃÂ°ÃÂ© Ã¢ÂÂ ÃÂ§ÃÂ³ÃÂÃÂ­ ÃÂ¨ÃÂ§ÃÂÃÂÃÂÃÂ§ÃÂÃÂ° ÃÂÃÂÃÂÃÂÃÂÃÂ¹",
-      "auth/cancelled-popup-request": "ÃÂªÃÂ ÃÂ¥ÃÂÃÂºÃÂ§ÃÂ¡ ÃÂ§ÃÂÃÂ·ÃÂÃÂ¨",
-      "auth/network-request-failed":  "ÃÂ®ÃÂ·ÃÂ£ ÃÂÃÂ ÃÂ§ÃÂÃÂ§ÃÂªÃÂµÃÂ§ÃÂ ÃÂ¨ÃÂ§ÃÂÃÂ¥ÃÂÃÂªÃÂ±ÃÂÃÂª",
-      "auth/user-disabled":           "ÃÂÃÂ°ÃÂ§ ÃÂ§ÃÂÃÂ­ÃÂ³ÃÂ§ÃÂ¨ ÃÂÃÂ¹ÃÂ·ÃÂÃÂ",
-    })[e.code] || ("ÃÂ®ÃÂ·ÃÂ£: " + (e.message || e.code));
+      "auth/popup-closed-by-user":    "Ø£ÙØºÙÙØª ÙØ§ÙØ°Ø© Ø§ÙØ¯Ø®ÙÙ â Ø­Ø§ÙÙ ÙØ±Ø© Ø£Ø®Ø±Ù",
+      "auth/popup-blocked":           "Ø§ÙÙØªØµÙØ­ Ø­Ø¬Ø¨ Ø§ÙÙØ§ÙØ°Ø© â Ø§Ø³ÙØ­ Ø¨Ø§ÙÙÙØ§ÙØ° ÙÙÙÙÙØ¹",
+      "auth/cancelled-popup-request": "ØªÙ Ø¥ÙØºØ§Ø¡ Ø§ÙØ·ÙØ¨",
+      "auth/network-request-failed":  "Ø®Ø·Ø£ ÙÙ Ø§ÙØ§ØªØµØ§Ù Ø¨Ø§ÙØ¥ÙØªØ±ÙØª",
+      "auth/user-disabled":           "ÙØ°Ø§ Ø§ÙØ­Ø³Ø§Ø¨ ÙØ¹Ø·ÙÙ",
+    })[e.code] || ("Ø®Ø·Ø£: " + (e.message || e.code));
   }
 
   logoutBtn.addEventListener("click", () => signOut(auth));
 
-  // Ã¢ÂÂÃ¢ÂÂ Ensure user record Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Ensure user record âââââââââââââââââââââââââââââââââââââââââ
   async function ensureUserRecord(user) {
     const snap = await get(ref(db, `users/${user.uid}`));
     const now  = Date.now();
@@ -177,7 +177,7 @@ import { auth, db } from "./firebase-config.js";
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Live listener Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Live listener ââââââââââââââââââââââââââââââââââââââââââââââ
   function listenUserData(uid) {
     onValue(ref(db, `users/${uid}`), snap => {
       if (!snap.exists()) return;
@@ -187,7 +187,7 @@ import { auth, db } from "./firebase-config.js";
     });
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Static UI updates (from DB data) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Static UI updates (from DB data) âââââââââââââââââââââââââ
   function updateStaticUI() {
     if (!userData) return;
     const bal   = userData.balance    || 0;
@@ -209,7 +209,7 @@ import { auth, db } from "./firebase-config.js";
     $("upgrade-balance").textContent = bal.toFixed(6);
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Mining calculations Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Mining calculations ââââââââââââââââââââââââââââââââââââââââ
   function calcMining() {
     if (!userData) return { pending: 0, elapsedHours: 0, maxHours: 3, isActive: false, remainingSec: 0, perSec: 0 };
 
@@ -231,7 +231,7 @@ import { auth, db } from "./firebase-config.js";
     return { pending, elapsedHours, maxHours, isActive, remainingSec, elapsedMs, maxMs, perSec };
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Timer Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Timer ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   function stopMiningTimer() {
     if (miningTimer) { clearInterval(miningTimer); miningTimer = null; }
   }
@@ -254,28 +254,28 @@ import { auth, db } from "./firebase-config.js";
     const { pending, elapsedHours, maxHours, isActive, remainingSec, perSec } = calcMining();
     const pct = Math.min(100, (elapsedHours / maxHours) * 100);
 
-    // Live pending display Ã¢ÂÂ 6 decimal places for real-time feel
+    // Live pending display â 6 decimal places for real-time feel
     $("pending-earnings").textContent = pending.toFixed(6);
     $("mine-progress-fill").style.width = pct.toFixed(3) + "%";
-    $("mine-time-text").textContent = elapsedHours.toFixed(4) + " / " + maxHours + " ÃÂ³ÃÂ§ÃÂ¹ÃÂ§ÃÂª";
-    $("mine-rate").textContent = (userData?.miningPower || 1) + " ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©";
+    $("mine-time-text").textContent = elapsedHours.toFixed(4) + " / " + maxHours + " Ø³Ø§Ø¹Ø§Øª";
+    $("mine-rate").textContent = (userData?.miningPower || 1) + " Î±/Ø³Ø§Ø¹Ø©";
 
     // Per-second rate
     const perSecEl = $("per-sec-rate");
-    if (perSecEl) perSecEl.textContent = "+" + perSec.toFixed(8) + " ÃÂ±/ÃÂ«ÃÂ§ÃÂÃÂÃÂ©";
+    if (perSecEl) perSecEl.textContent = "+" + perSec.toFixed(8) + " Î±/Ø«Ø§ÙÙØ©";
 
     if (isActive) {
-      $("mine-status-title").textContent = "ÃÂ§ÃÂÃÂªÃÂ¹ÃÂ¯ÃÂÃÂ ÃÂÃÂ´ÃÂ· Ã¢ÂÂ";
-      $("mine-status-sub").textContent   = "ÃÂÃÂªÃÂ ÃÂªÃÂ¹ÃÂ¯ÃÂÃÂ ÃÂ§ÃÂÃÂ¹ÃÂÃÂÃÂ§ÃÂª ÃÂªÃÂÃÂÃÂ§ÃÂ¦ÃÂÃÂ§ÃÂ ÃÂ§ÃÂÃÂ¢ÃÂ";
-      $("mine-badge").textContent        = "Ã¢ÂÂ ÃÂÃÂ´ÃÂ·";
+      $("mine-status-title").textContent = "Ø§ÙØªØ¹Ø¯ÙÙ ÙØ´Ø· â";
+      $("mine-status-sub").textContent   = "ÙØªÙ ØªØ¹Ø¯ÙÙ Ø§ÙØ¹ÙÙØ§Øª ØªÙÙØ§Ø¦ÙØ§Ù Ø§ÙØ¢Ù";
+      $("mine-badge").textContent        = "â ÙØ´Ø·";
       $("mine-badge").className          = "auto-mine-badge active";
       $("time-remaining").textContent    = formatCountdown(remainingSec);
       claimBtn.disabled = isClaiming;
       claimBtn.className = "btn-claim";
     } else {
-      $("mine-status-title").textContent = "ÃÂ§ÃÂÃÂªÃÂÃÂ ÃÂ§ÃÂÃÂªÃÂ¹ÃÂ¯ÃÂÃÂ Ã¢ÂÂ";
-      $("mine-status-sub").textContent   = "ÃÂ§ÃÂ¬ÃÂÃÂ ÃÂ§ÃÂÃÂ£ÃÂ±ÃÂ¨ÃÂ§ÃÂ­ ÃÂÃÂ¥ÃÂ¹ÃÂ§ÃÂ¯ÃÂ© ÃÂªÃÂ´ÃÂºÃÂÃÂ ÃÂ§ÃÂÃÂªÃÂ¹ÃÂ¯ÃÂÃÂ";
-      $("mine-badge").textContent        = "Ã¢ÂÂ¸ ÃÂÃÂÃÂªÃÂÃÂ";
+      $("mine-status-title").textContent = "Ø§ÙØªÙÙ Ø§ÙØªØ¹Ø¯ÙÙ â";
+      $("mine-status-sub").textContent   = "Ø§Ø¬ÙÙ Ø§ÙØ£Ø±Ø¨Ø§Ø­ ÙØ¥Ø¹Ø§Ø¯Ø© ØªØ´ØºÙÙ Ø§ÙØªØ¹Ø¯ÙÙ";
+      $("mine-badge").textContent        = "â¸ ÙÙØªÙÙ";
       $("mine-badge").className          = "auto-mine-badge stopped";
       $("time-remaining").textContent    = "00:00:00";
       claimBtn.disabled = isClaiming || pending <= 0;
@@ -283,15 +283,15 @@ import { auth, db } from "./firebase-config.js";
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Claim Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Claim ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   claimBtn.addEventListener("click", async () => {
     if (!currentUser || !userData || isClaiming) return;
     const { pending } = calcMining();
-    if (pending < 0.000001) { showToast("ÃÂÃÂ§ ÃÂªÃÂÃÂ¬ÃÂ¯ ÃÂ£ÃÂ±ÃÂ¨ÃÂ§ÃÂ­ ÃÂÃÂ§ÃÂÃÂÃÂ© ÃÂ¨ÃÂ¹ÃÂ¯", "err"); return; }
+    if (pending < 0.000001) { showToast("ÙØ§ ØªÙØ¬Ø¯ Ø£Ø±Ø¨Ø§Ø­ ÙØ§ÙÙØ© Ø¨Ø¹Ø¯", "err"); return; }
 
     isClaiming = true;
     claimBtn.disabled = true;
-    claimBtn.innerHTML = `<span class="claim-spinner"></span> ÃÂ¬ÃÂ§ÃÂ± ÃÂ§ÃÂÃÂ¬ÃÂÃÂÃ¢ÂÂ¦`;
+    claimBtn.innerHTML = `<span class="claim-spinner"></span> Ø¬Ø§Ø± Ø§ÙØ¬ÙÙâ¦`;
 
     const now      = Date.now();
     const earned   = Math.floor(pending * 1_000_000) / 1_000_000; // floor to 6dp
@@ -305,18 +305,18 @@ import { auth, db } from "./firebase-config.js";
         lastClaimTime:  now,
         miningStartTime: now
       });
-      claimBtn.innerHTML = `<span>Ã°ÂÂÂ° ÃÂ§ÃÂ¬ÃÂÃÂ ÃÂ§ÃÂÃÂ£ÃÂ±ÃÂ¨ÃÂ§ÃÂ­</span>`;
-      showToast(`+ÃÂ±${earned.toFixed(6)} ÃÂªÃÂ ÃÂ§ÃÂÃÂ¬ÃÂÃÂ! Ã°ÂÂÂ°`);
+      claimBtn.innerHTML = `<span>ð° Ø§Ø¬ÙÙ Ø§ÙØ£Ø±Ø¨Ø§Ø­</span>`;
+      showToast(`+Î±${earned.toFixed(6)} ØªÙ Ø§ÙØ¬ÙÙ! ð°`);
       spawnRewardBurst(earned);
     } catch (e) {
-      showToast("ÃÂ®ÃÂ·ÃÂ£: " + e.message, "err");
-      claimBtn.innerHTML = `<span>Ã°ÂÂÂ° ÃÂ§ÃÂ¬ÃÂÃÂ ÃÂ§ÃÂÃÂ£ÃÂ±ÃÂ¨ÃÂ§ÃÂ­</span>`;
+      showToast("Ø®Ø·Ø£: " + e.message, "err");
+      claimBtn.innerHTML = `<span>ð° Ø§Ø¬ÙÙ Ø§ÙØ£Ø±Ø¨Ø§Ø­</span>`;
     } finally {
       isClaiming = false;
     }
   });
 
-  // Ã¢ÂÂÃ¢ÂÂ Reward burst animation Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Reward burst animation âââââââââââââââââââââââââââââââââââââ
   function spawnRewardBurst(amount) {
     const colors = ["#f0b429","#00d4ff","#22c55e","#a855f7","#fff"];
     for (let i = 0; i < 18; i++) {
@@ -344,37 +344,37 @@ import { auth, db } from "./firebase-config.js";
     }
     const label = document.createElement("div");
     label.className   = "float-reward";
-    label.textContent = `+ÃÂ±${amount.toFixed(6)}`;
+    label.textContent = `+Î±${amount.toFixed(6)}`;
     label.style.cssText = "left:50%;top:42%;transform:translateX(-50%);position:fixed;z-index:9999;";
     document.body.appendChild(label);
     label.addEventListener("animationend", () => label.remove());
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Coupon Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Coupon âââââââââââââââââââââââââââââââââââââââââââââââââââââ
   redeemBtn.addEventListener("click", redeemCoupon);
   couponInp.addEventListener("keydown", e => { if (e.key === "Enter") redeemCoupon(); });
 
   async function redeemCoupon() {
     const code = couponInp.value.trim().toUpperCase();
-    if (!code)             { setCouponMsg("ÃÂ£ÃÂ¯ÃÂ®ÃÂ ÃÂÃÂÃÂ¯ ÃÂ§ÃÂÃÂÃÂ³ÃÂÃÂÃÂ© ÃÂ£ÃÂÃÂÃÂ§ÃÂ", "err"); return; }
+    if (!code)             { setCouponMsg("Ø£Ø¯Ø®Ù ÙÙØ¯ Ø§ÙÙØ³ÙÙØ© Ø£ÙÙØ§Ù", "err"); return; }
     if (!currentUser || !userData) return;
     redeemBtn.disabled = true;
-    setCouponMsg("ÃÂ¬ÃÂ§ÃÂ± ÃÂ§ÃÂÃÂªÃÂ­ÃÂÃÂÃ¢ÂÂ¦", "");
+    setCouponMsg("Ø¬Ø§Ø± Ø§ÙØªØ­ÙÙâ¦", "");
     try {
       const cpSnap = await get(ref(db, `coupons/${code}`));
-      if (!cpSnap.exists()) { setCouponMsg("Ã¢ÂÂ ÃÂ§ÃÂÃÂÃÂ³ÃÂÃÂÃÂ© ÃÂºÃÂÃÂ± ÃÂÃÂÃÂ¬ÃÂÃÂ¯ÃÂ©", "err"); return; }
+      if (!cpSnap.exists()) { setCouponMsg("â Ø§ÙÙØ³ÙÙØ© ØºÙØ± ÙÙØ¬ÙØ¯Ø©", "err"); return; }
       const cp = cpSnap.val();
-      if (!cp.isActive)     { setCouponMsg("Ã¢ÂÂ ÃÂ§ÃÂÃÂÃÂ³ÃÂÃÂÃÂ© ÃÂºÃÂÃÂ± ÃÂÃÂ´ÃÂ·ÃÂ©", "err"); return; }
+      if (!cp.isActive)     { setCouponMsg("â Ø§ÙÙØ³ÙÙØ© ØºÙØ± ÙØ´Ø·Ø©", "err"); return; }
       const usedBy = cp.usedBy && typeof cp.usedBy === "object" ? cp.usedBy : {};
-      if (usedBy[currentUser.uid]) { setCouponMsg("Ã¢ÂÂ ÃÂ§ÃÂ³ÃÂªÃÂ®ÃÂ¯ÃÂÃÂª ÃÂÃÂ°ÃÂ ÃÂ§ÃÂÃÂÃÂ³ÃÂÃÂÃÂ© ÃÂÃÂ ÃÂÃÂ¨ÃÂ", "err"); return; }
+      if (usedBy[currentUser.uid]) { setCouponMsg("â Ø§Ø³ØªØ®Ø¯ÙØª ÙØ°Ù Ø§ÙÙØ³ÙÙØ© ÙÙ ÙØ¨Ù", "err"); return; }
       const newBal = Math.round(((userData.balance || 0) + cp.rewardAmount) * 1_000_000) / 1_000_000;
       await update(ref(db, `users/${currentUser.uid}`), { balance: newBal });
       await update(ref(db, `coupons/${code}/usedBy`), { [currentUser.uid]: true });
-      setCouponMsg(`Ã¢ÂÂ ÃÂªÃÂ! +ÃÂ±${cp.rewardAmount}`, "ok");
+      setCouponMsg(`â ØªÙ! +Î±${cp.rewardAmount}`, "ok");
       couponInp.value = "";
-      showToast(`+ÃÂ±${cp.rewardAmount} ÃÂªÃÂ ÃÂ§ÃÂ³ÃÂªÃÂ¨ÃÂ¯ÃÂ§ÃÂ ÃÂ§ÃÂÃÂÃÂ³ÃÂÃÂÃÂ©! Ã°ÂÂÂ`);
+      showToast(`+Î±${cp.rewardAmount} ØªÙ Ø§Ø³ØªØ¨Ø¯Ø§Ù Ø§ÙÙØ³ÙÙØ©! ð`);
     } catch (e) {
-      setCouponMsg("ÃÂ®ÃÂ·ÃÂ£: " + e.message, "err");
+      setCouponMsg("Ø®Ø·Ø£: " + e.message, "err");
     } finally {
       redeemBtn.disabled = false;
     }
@@ -385,7 +385,7 @@ import { auth, db } from "./firebase-config.js";
     couponMsgEl.className   = "coupon-msg " + t;
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Upgrades Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Upgrades âââââââââââââââââââââââââââââââââââââââââââââââââââ
   function renderUpgrades() {
     if (!userData) return;
     const curPL  = userData.miningPowerLevel    || 1;
@@ -405,15 +405,15 @@ import { auth, db } from "./firebase-config.js";
       const card = document.createElement("div");
       card.className = "upgrade-card" + (isCurrent ? " current" : isOwned ? " owned" : "");
       card.innerHTML = `
-        <div class="uc-badge">${isOwned ? "Ã¢ÂÂ" : isCurrent ? "Ã¢ÂÂ¡" : "Ã°ÂÂÂ"}</div>
-        <div class="uc-level">ÃÂ§ÃÂÃÂÃÂ³ÃÂªÃÂÃÂ ${u.level}</div>
+        <div class="uc-badge">${isOwned ? "â" : isCurrent ? "â¡" : "ð"}</div>
+        <div class="uc-level">Ø§ÙÙØ³ØªÙÙ ${u.level}</div>
         <div class="uc-value">${u.label}</div>
-        <div class="uc-subsub">+${u.perSec.toFixed(6)} ÃÂ±/ÃÂ«</div>
-        <div class="uc-cost">${u.cost === 0 ? "ÃÂÃÂ¬ÃÂ§ÃÂÃÂ" : u.cost + " ÃÂ±"}</div>
+        <div class="uc-subsub">+${u.perSec.toFixed(6)} Î±/Ø«</div>
+        <div class="uc-cost">${u.cost === 0 ? "ÙØ¬Ø§ÙÙ" : u.cost + " Î±"}</div>
         <button class="uc-btn ${isCurrent ? "is-current" : isOwned ? "is-owned" : isNext && canAfford ? "buy" : isNext ? "no-funds" : "locked"}"
           data-type="power" data-level="${u.level}"
           ${!isNext || !canAfford || isCurrent || isOwned ? "disabled" : ""}>
-          ${isCurrent ? "ÃÂ§ÃÂÃÂ­ÃÂ§ÃÂÃÂ Ã¢ÂÂ" : isOwned ? "ÃÂÃÂÃÂÃÂÃÂ" : isNext ? (canAfford ? "ÃÂªÃÂ±ÃÂÃÂÃÂ© Ã°ÂÂÂ" : "ÃÂ±ÃÂµÃÂÃÂ¯ ÃÂºÃÂÃÂ± ÃÂÃÂ§ÃÂÃÂ") : "Ã°ÂÂÂ ÃÂÃÂÃÂÃÂ"}
+          ${isCurrent ? "Ø§ÙØ­Ø§ÙÙ â" : isOwned ? "ÙÙÙÙÙ" : isNext ? (canAfford ? "ØªØ±ÙÙØ© ð" : "Ø±ØµÙØ¯ ØºÙØ± ÙØ§ÙÙ") : "ð ÙÙÙÙ"}
         </button>`;
       pc.appendChild(card);
     });
@@ -429,15 +429,15 @@ import { auth, db } from "./firebase-config.js";
       const card = document.createElement("div");
       card.className = "upgrade-card" + (isCurrent ? " current" : isOwned ? " owned" : "");
       card.innerHTML = `
-        <div class="uc-badge">${isOwned ? "Ã¢ÂÂ" : isCurrent ? "Ã¢ÂÂ±" : "Ã°ÂÂÂ"}</div>
-        <div class="uc-level">ÃÂ§ÃÂÃÂÃÂ³ÃÂªÃÂÃÂ ${u.level}</div>
+        <div class="uc-badge">${isOwned ? "â" : isCurrent ? "â±" : "ð"}</div>
+        <div class="uc-level">Ø§ÙÙØ³ØªÙÙ ${u.level}</div>
         <div class="uc-value">${u.label}</div>
-        <div class="uc-subsub">${u.hours * 60} ÃÂ¯ÃÂÃÂÃÂÃÂ© ÃÂÃÂ³ÃÂªÃÂÃÂ±ÃÂ©</div>
-        <div class="uc-cost">${u.cost === 0 ? "ÃÂÃÂ¬ÃÂ§ÃÂÃÂ" : u.cost + " ÃÂ±"}</div>
+        <div class="uc-subsub">${u.hours * 60} Ø¯ÙÙÙØ© ÙØ³ØªÙØ±Ø©</div>
+        <div class="uc-cost">${u.cost === 0 ? "ÙØ¬Ø§ÙÙ" : u.cost + " Î±"}</div>
         <button class="uc-btn ${isCurrent ? "is-current" : isOwned ? "is-owned" : isNext && canAfford ? "buy" : isNext ? "no-funds" : "locked"}"
           data-type="duration" data-level="${u.level}"
           ${!isNext || !canAfford || isCurrent || isOwned ? "disabled" : ""}>
-          ${isCurrent ? "ÃÂ§ÃÂÃÂ­ÃÂ§ÃÂÃÂ Ã¢ÂÂ" : isOwned ? "ÃÂÃÂÃÂÃÂÃÂ" : isNext ? (canAfford ? "ÃÂªÃÂ±ÃÂÃÂÃÂ© Ã°ÂÂÂ" : "ÃÂ±ÃÂµÃÂÃÂ¯ ÃÂºÃÂÃÂ± ÃÂÃÂ§ÃÂÃÂ") : "Ã°ÂÂÂ ÃÂÃÂÃÂÃÂ"}
+          ${isCurrent ? "Ø§ÙØ­Ø§ÙÙ â" : isOwned ? "ÙÙÙÙÙ" : isNext ? (canAfford ? "ØªØ±ÙÙØ© ð" : "Ø±ØµÙØ¯ ØºÙØ± ÙØ§ÙÙ") : "ð ÙÙÙÙ"}
         </button>`;
       dc.appendChild(card);
     });
@@ -453,7 +453,7 @@ import { auth, db } from "./firebase-config.js";
     const upgrade = list.find(u => u.level === level);
     if (!upgrade) return;
     const bal = userData.balance || 0;
-    if (bal < upgrade.cost) { showToast("ÃÂ±ÃÂµÃÂÃÂ¯ ÃÂºÃÂÃÂ± ÃÂÃÂ§ÃÂÃÂ Ã¢ÂÂ", "err"); return; }
+    if (bal < upgrade.cost) { showToast("Ø±ØµÙØ¯ ØºÙØ± ÙØ§ÙÙ â", "err"); return; }
     const newBal = Math.round((bal - upgrade.cost) * 1_000_000) / 1_000_000;
     const upd = { balance: newBal };
     if (type === "power") {
@@ -465,14 +465,14 @@ import { auth, db } from "./firebase-config.js";
     }
     try {
       await update(ref(db, `users/${currentUser.uid}`), upd);
-      showToast(`Ã¢ÂÂ ÃÂªÃÂÃÂª ÃÂ§ÃÂÃÂªÃÂ±ÃÂÃÂÃÂ© ÃÂ¥ÃÂÃÂ ÃÂ§ÃÂÃÂÃÂ³ÃÂªÃÂÃÂ ${level}!`);
+      showToast(`â ØªÙØª Ø§ÙØªØ±ÙÙØ© Ø¥ÙÙ Ø§ÙÙØ³ØªÙÙ ${level}!`);
       renderUpgrades();
     } catch (e) {
-      showToast("ÃÂ®ÃÂ·ÃÂ£: " + e.message, "err");
+      showToast("Ø®Ø·Ø£: " + e.message, "err");
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂ Profile Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ââ Profile ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   function loadProfile() {
     if (!currentUser || !userData) return;
     const set = (id, val) => { const el = $(id); if(el) el.textContent = val; };
@@ -480,22 +480,22 @@ import { auth, db } from "./firebase-config.js";
     setS("profile-photo", userData.photoURL || "");
     set("profile-username",  userData.username || "");
     set("profile-email",     currentUser.email || "");
-    set("profile-balance",   (userData.balance    || 0).toFixed(6) + " ÃÂ±");
-    set("profile-total",     (userData.totalMined || 0).toFixed(6) + " ÃÂ±");
-    set("profile-power",     (userData.miningPower || 1) + " ÃÂ±/ÃÂ³ÃÂ§ÃÂ¹ÃÂ©");
-    set("profile-duration",  (userData.maxMiningDuration || 3) + " ÃÂ³ÃÂ§ÃÂ¹ÃÂ§ÃÂª");
-    set("profile-power-level",  "ÃÂ§ÃÂÃÂÃÂ³ÃÂªÃÂÃÂ " + (userData.miningPowerLevel    || 1));
-    set("profile-dur-level",    "ÃÂ§ÃÂÃÂÃÂ³ÃÂªÃÂÃÂ " + (userData.miningDurationLevel || 1));
+    set("profile-balance",   (userData.balance    || 0).toFixed(6) + " Î±");
+    set("profile-total",     (userData.totalMined || 0).toFixed(6) + " Î±");
+    set("profile-power",     (userData.miningPower || 1) + " Î±/Ø³Ø§Ø¹Ø©");
+    set("profile-duration",  (userData.maxMiningDuration || 3) + " Ø³Ø§Ø¹Ø§Øª");
+    set("profile-power-level",  "Ø§ÙÙØ³ØªÙÙ " + (userData.miningPowerLevel    || 1));
+    set("profile-dur-level",    "Ø§ÙÙØ³ØªÙÙ " + (userData.miningDurationLevel || 1));
     const lc = userData.lastClaimTime;
-    set("profile-last-claim", lc ? new Date(lc).toLocaleString("ar-SA") : "Ã¢ÂÂ");
+    set("profile-last-claim", lc ? new Date(lc).toLocaleString("ar-SA") : "â");
     const { perSec } = calcMining();
-    set("profile-per-sec", "+" + perSec.toFixed(8) + " ÃÂ±/ÃÂ«");
+    set("profile-per-sec", "+" + perSec.toFixed(8) + " Î±/Ø«");
   }
   
 
-  // ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-  // PRICE CARDS â user side
-  // ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ════════════════════════════════════════════════════════════════
+  // PRICE CARDS — user side
+  // ════════════════════════════════════════════════════════════════
 
   const CARD_COLORS_USER = {
     gold:   { bg:"linear-gradient(135deg,#1a1505,#2a2008)", border:"#f0b429", accent:"#f0b429" },
@@ -553,18 +553,18 @@ import { auth, db } from "./firebase-config.js";
         style="background:${col.bg};border-color:${col.border}">
         <div class="pc-glow" style="background:radial-gradient(circle,${col.accent}18,transparent 70%)"></div>
         <div class="pc-header">
-          <span class="pc-icon">${c.icon||"ð"}</span>
-          <span class="pc-status ${claimed?"claimed-badge":full?"off":"live"}">${claimed?"â ÙÙØ³ØªÙÙØ©":full?"ð ÙÙØªÙÙØ©":"â ÙØªØ§Ø­Ø©"}</span>
+          <span class="pc-icon">${c.icon||"🎁"}</span>
+          <span class="pc-status ${claimed?"claimed-badge":full?"off":"live"}">${claimed?"✅ مُستلمة":full?"🔒 مكتملة":"● متاحة"}</span>
         </div>
-        <div class="pc-title" style="color:${col.accent}">${c.title||"Ø¨Ø·Ø§ÙØ© Ø¹Ø±Ø¶"}</div>
+        <div class="pc-title" style="color:${col.accent}">${c.title||"بطاقة عرض"}</div>
         <div class="pc-desc">${c.description||""}</div>
-        <div class="pc-reward" style="color:${col.accent}">+Î± ${(c.reward||0).toFixed(4)}</div>
-        <div class="pc-timer" id="card-timer-${id}" style="color:${col.accent}88">â³ Ø¬Ø§Ø± Ø§ÙØªØ­ÙÙÙâ¦</div>
+        <div class="pc-reward" style="color:${col.accent}">+α ${(c.reward||0).toFixed(4)}</div>
+        <div class="pc-timer" id="card-timer-${id}" style="color:${col.accent}88">⏳ جار التحميل…</div>
         <button class="pc-claim-btn ${claimed?"claimed":full?"full":""}"
           id="claim-card-${id}"
           onclick="claimCard('${id}')"
           ${claimed || full ? "disabled" : ""}>
-          ${claimed?"â ØªÙ Ø§ÙØ§Ø³ØªÙØ§Ù":full?"ð Ø§ÙØªÙØª":"ð Ø§Ø­ØµÙ Ø¹ÙÙÙØ§ Ø§ÙØ¢Ù"}
+          ${claimed?"✅ تم الاستلام":full?"🔒 انتهت":"🎁 احصل عليها الآن"}
         </button>
       </div>`;
     }).join("")}</div>`;
@@ -581,7 +581,7 @@ import { auth, db } from "./firebase-config.js";
     if (!el) { clearInterval(cardTimers[id]); return; }
     const rem = endTime - Date.now();
     if (rem <= 0) {
-      el.textContent = "â Ø§ÙØªÙÙ Ø§ÙØ¹Ø±Ø¶";
+      el.textContent = "⌛ انتهى العرض";
       clearInterval(cardTimers[id]);
       renderUserCards();
       return;
@@ -591,8 +591,8 @@ import { auth, db } from "./firebase-config.js";
     const m = Math.floor((rem % 3600000)  / 60000);
     const s = Math.floor((rem % 60000)    / 1000);
     el.textContent = d > 0
-      ? `â³ ${d} ÙÙÙ ${h} Ø³Ø§Ø¹Ø©`
-      : `â³ ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+      ? `⏳ ${d} يوم ${h} ساعة`
+      : `⏳ ${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
   }
 
   // Claim card
@@ -607,12 +607,12 @@ import { auth, db } from "./firebase-config.js";
     const maxU   = card.maxUses || 0;
     const uid    = currentUser.uid;
 
-    if (card.claimedBy && card.claimedBy[uid]) { showToast("Ø§Ø³ØªÙÙØª ÙØ°Ù Ø§ÙØ¨Ø·Ø§ÙØ© ÙÙ ÙØ¨Ù â","err"); return; }
+    if (card.claimedBy && card.claimedBy[uid]) { showToast("استلمت هذه البطاقة من قبل ✅","err"); return; }
     if (!card.isActive || now < (card.startTime||0) || now > (card.endTime||Infinity))
-      { showToast("ÙØ°Ù Ø§ÙØ¨Ø·Ø§ÙØ© ØºÙØ± ÙØªØ§Ø­Ø© Ø§ÙØ¢Ù","err"); return; }
-    if (maxU > 0 && uses >= maxU) { showToast("Ø§ÙØªÙØª ÙØ°Ù Ø§ÙØ¨Ø·Ø§ÙØ© ð","err"); return; }
+      { showToast("هذه البطاقة غير متاحة الآن","err"); return; }
+    if (maxU > 0 && uses >= maxU) { showToast("انتهت هذه البطاقة 🔒","err"); return; }
 
-    if (btn) { btn.disabled = true; btn.textContent = "Ø¬Ø§Ø± Ø§ÙØ§Ø³ØªÙØ§Ùâ¦"; }
+    if (btn) { btn.disabled = true; btn.textContent = "جار الاستلام…"; }
 
     const newBal = Math.round(((userData.balance||0) + card.reward) * 1e6) / 1e6;
     try {
@@ -620,29 +620,40 @@ import { auth, db } from "./firebase-config.js";
         update(ref(db, `users/${uid}`), { balance: newBal }),
         update(ref(db, `cards/${cardId}/claimedBy`), { [uid]: true })
       ]);
-      showToast(`+Î±${card.reward.toFixed(4)} ØªÙ Ø§Ø³ØªÙØ§Ù Ø§ÙØ¨Ø·Ø§ÙØ©! ð`);
+      showToast(`+α${card.reward.toFixed(4)} تم استلام البطاقة! 🎁`);
       spawnRewardBurst(card.reward);
-      if (btn) { btn.textContent = "â ØªÙ Ø§ÙØ§Ø³ØªÙØ§Ù"; btn.classList.add("claimed"); }
+      if (btn) { btn.textContent = "✅ تم الاستلام"; btn.classList.add("claimed"); }
     } catch(e) {
-      showToast("Ø®Ø·Ø£: "+e.message,"err");
-      if (btn) { btn.disabled = false; btn.textContent = "ð Ø§Ø­ØµÙ Ø¹ÙÙÙØ§ Ø§ÙØ¢Ù"; }
+      showToast("خطأ: "+e.message,"err");
+      if (btn) { btn.disabled = false; btn.textContent = "🎁 احصل عليها الآن"; }
     }
   };
 
-  
-    // Cards listener — triggered from existing onAuthStateChanged
-    function startCardsListener() {
-      onValue(ref(db, "cards"), snap => {
+  // Patch listenUserData to also start card listener
+  const _origListenUserData = listenUserData;
+  function listenUserData(uid) {
+    _origListenUserData(uid);
+  }
+
+  // Store firebase imports for cards listener
+  import {
+    onValue as onValueCards, ref as refCards
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  // Start cards listener after auth
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      onValueCards(refCards(db, "cards"), snap => {
         allCardsData = {};
         if (snap.exists()) snap.forEach(c => { allCardsData[c.key] = c.val(); });
         renderUserCards();
       });
-    }
-    function clearCards() {
+    } else {
       Object.values(cardTimers).forEach(t => clearInterval(t));
       cardTimers = {};
       allCardsData = {};
       const section = document.getElementById("cards-section");
       if (section) section.style.display = "none";
     }
-      
+  });
+  
