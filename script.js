@@ -1,6 +1,6 @@
 import { auth, db, ADMIN_EMAIL } from "./firebase-config.js";
 import {
-  GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   ref, get, set, update, onValue, query, orderByChild, limitToLast
@@ -76,27 +76,43 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 let currentUser = null;
 let userData    = null;
 
-btnLogin.addEventListener("click", async () => {
-  try {
-    btnLogin.disabled = true;
-    btnLogin.textContent = "جار التحويل…";
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  } catch (e) {
-    btnLogin.disabled = false;
-    btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
-    showToast("فشل تسجيل الدخول: " + e.message, "err");
+btnLogin.addEventListener("click", () => {
+  btnLogin.disabled = true;
+  btnLogin.textContent = "جار فتح نافذة الدخول…";
+
+  // Open auth page in a new top-level window (works outside iframe restrictions)
+  const w = 500, h = 600;
+  const left = Math.max(0, (screen.width  - w) / 2);
+  const top  = Math.max(0, (screen.height - h) / 2);
+  const authWin = window.open(
+    "auth.html",
+    "AlphaCoinAuth",
+    `width=${w},height=${h},left=${left},top=${top},resizable=no`
+  );
+
+  // Listen for success message from auth window
+  function onMessage(e) {
+    if (e.data && e.data.type === "AUTH_SUCCESS") {
+      window.removeEventListener("message", onMessage);
+      btnLogin.disabled = false;
+      btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
+      if (authWin && !authWin.closed) authWin.close();
+    }
   }
+  window.addEventListener("message", onMessage);
+
+  // Re-enable button if auth window is closed without logging in
+  const checkClosed = setInterval(() => {
+    if (!authWin || authWin.closed) {
+      clearInterval(checkClosed);
+      window.removeEventListener("message", onMessage);
+      btnLogin.disabled = false;
+      btnLogin.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:22px"> تسجيل الدخول بـ Google`;
+    }
+  }, 800);
 });
 
 btnLogout.addEventListener("click", () => signOut(auth));
-
-// ── Handle redirect result on page load ────────────────────────
-getRedirectResult(auth).catch(e => {
-  if (e && e.code !== "auth/no-auth-event") {
-    showToast("خطأ في تسجيل الدخول: " + e.message, "err");
-  }
-});
 
 onAuthStateChanged(auth, async user => {
   loadingEl.style.display = "none";
